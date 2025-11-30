@@ -7,7 +7,7 @@ import PlaylistScreen from "./PlaylistScreen";
 import RegisterScreen from "./RegisterScreen";
 import SongCard from "./SongCard";
 import SongCatalogScreen from "./SongCatalogScreen";
-import SplashScreen from "./SplashScreen";
+import LandingScreen from "./LandingScreen";
 
 export {
     AppBanner,
@@ -19,5 +19,5 @@ export {
     RegisterScreen,
     SongCard,
     SongCatalogScreen,
-    SplashScreen
+    LandingScreen
 }

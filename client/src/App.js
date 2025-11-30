@@ -19,7 +19,7 @@ const App = () => {
               <Route path="/login/" element={<LoginScreen />} />
               <Route path="/register/" element={<RegisterScreen />} />
               <Route path="/edit/" element={<EditAccountScreen />} />
-              <Route path="/playlist/:id" element={<PlaylistScreen />} />
+              <Route path="/playlists/" element={<PlaylistScreen />} />
           </Routes>
         </BrowserRouter>
     )

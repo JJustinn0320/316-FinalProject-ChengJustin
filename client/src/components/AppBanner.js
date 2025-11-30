@@ -8,15 +8,24 @@ export default function AppBanner(){
     function handleAccountCircleClick(){
         console.log('clicked')
     }
+
+    const buttonStyle = {
+        mr: 2, 
+        border: '3px solid white', 
+        color: "white", 
+        fontSize: 12, 
+        fontWeight: 'bold',
+        minWidth: 100
+    }
     return (
-        <AppBar position='static' sx={{ backgroundColor: '#d80ee3' }}>
+        <AppBar position='static' sx={{ backgroundColor: '#f26fcf' }}>
             <Toolbar variant='dense' sx={{ justifyContent: 'space-between' }}>
                 <div>
                     <IconButton edge='start' aria-label="account-circle">
                         <HomeOutlinedIcon sx={{ border: '3.5px solid white', color: "white", fontSize: 40, borderRadius: '50%' }}/>
                     </IconButton>
-                    <Button variant="text" sx={{ mr: 2, border: '3px solid white', color: "white", fontSize: 12, fontWeight: 'bold'}}>Playlists</Button>
-                    <Button variant="text" sx={{ mr: 2, border: '3px solid white', color: "white", fontSize: 12, fontWeight: 'bold'}}>Songs Catalog</Button>
+                    <Button variant="text" sx={buttonStyle}>Playlists</Button>
+                    <Button variant="text" sx={buttonStyle}>Songs Catalog</Button>
                     
                 </div>
                 <IconButton edge='end' aria-label="account-circle" onClick={handleAccountCircleClick}>

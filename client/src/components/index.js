@@ -1,4 +1,5 @@
 import AppBanner from "./AppBanner";
+import Copyright from "./CopyRight";
 import EditAccountScreen from "./EditAccountScreen";
 import HomeWrapper from "./HomeWrapper";
 import ListCard from "./ListCard";
@@ -11,6 +12,7 @@ import LandingScreen from "./LandingScreen";
 
 export {
     AppBanner,
+    Copyright,
     EditAccountScreen,
     HomeWrapper,
     ListCard,

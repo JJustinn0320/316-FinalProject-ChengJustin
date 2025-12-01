@@ -1,9 +1,134 @@
-export default function RegisterScreen(){
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Copyright from './CopyRight';
 
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
+import Button from'@mui/material/Button';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import ClearIcon from '@mui/icons-material/Clear';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+
+function ClearableTextField({ value, onChange, ...props }) {
+    return (
+        <TextField
+            value={value}
+            onChange={onChange}
+            slotProps={{
+                input: {
+                    endAdornment: value && (
+                        <InputAdornment position="end">
+                            <IconButton
+                                aria-label="clear field"
+                                onClick={() => onChange({ target: { value: '' } })}
+                                edge="end"
+                            >
+                                <ClearIcon />
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                },
+            }}
+            {...props}
+        />
+    );
+}
+
+export default function RegisterScreen(){
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        passwordConfirm: ''
+    });
+
+    const handleChange = (field) => (event) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: event.target.value
+        }));
+    };
+
+    function handleSubmit(event){
+        event.preventDefault();
+        console.log("Form Data:", formData);
+    }
+
+    const navigate = useNavigate();
+    function handleLogin(){
+        navigate('/login/')
+    }
+
+    const buttonStyle = {
+        mr: 2, 
+        color: "white", 
+        backgroundColor: "#505050", 
+        fontSize: 15,  
+        minWidth: 150
+    }
     return (
         <div id="register-screen">
             <center>
+                <LockOutlinedIcon sx={{
+                    mt:  5,
+                    fontSize: 60
+                }}/>
                 <h1>Create Account</h1>
+                <Box 
+                    component="form"
+                    onSubmit={handleSubmit}
+                    sx={{ width: 400, margin: '0 auto' }}
+                >
+                    <Stack spacing={2}>
+                        <ClearableTextField
+                            required
+                            name="username"
+                            label="Username"
+                            autoComplete='username'
+                            value={formData.username}
+                            onChange={handleChange('username')}
+                        />
+                        <ClearableTextField
+                            required
+                            name="email"
+                            label="Email"
+                            autoComplete="email"
+                            value={formData.email}
+                            onChange={handleChange('email')}
+                        />
+                        <ClearableTextField 
+                            required
+                            name="password"
+                            type="password"
+                            label="Password"
+                            autoComplete='new-password'
+                            value={formData.password}
+                            onChange={handleChange('password')}
+                        />
+                        <ClearableTextField 
+                            required
+                            name="passwordConfirm"
+                            type="password"
+                            label="Password Confirm"
+                            autoComplete='new-password'
+                            value={formData.passwordConfirm}
+                            onChange={handleChange('passwordConfirm')}
+                        />
+                        <Button 
+                            type="submit"
+                            fullWidth 
+                            sx={buttonStyle}
+                        >Create Account</Button>
+                        <Box sx={{ textAlign: 'right' }}>
+                            Already have an Account?
+                            <Button onClick={handleLogin}>Sign In</Button>  
+                        </Box>
+                        
+                    </Stack>
+                </Box>
+                <Copyright sx={{mt: '5', p: 5}}/>
             </center>
         </div>
     )

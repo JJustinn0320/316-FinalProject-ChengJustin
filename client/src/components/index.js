@@ -1,5 +1,6 @@
 import AppBanner from "./AppBanner";
-import Copyright from "./CopyRight";
+import ClearableTextField from "./ClearableTextField";
+import Copyright from "./Copyright";
 import EditAccountScreen from "./EditAccountScreen";
 import HomeWrapper from "./HomeWrapper";
 import ListCard from "./ListCard";
@@ -12,6 +13,7 @@ import LandingScreen from "./LandingScreen";
 
 export {
     AppBanner,
+    ClearableTextField,
     Copyright,
     EditAccountScreen,
     HomeWrapper,

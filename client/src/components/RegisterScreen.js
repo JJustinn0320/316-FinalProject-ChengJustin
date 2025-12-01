@@ -1,40 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Copyright from './CopyRight';
+import {Copyright, ClearableTextField} from './index'
 
-import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import Button from'@mui/material/Button';
-import InputAdornment from '@mui/material/InputAdornment';
-import IconButton from '@mui/material/IconButton';
-import ClearIcon from '@mui/icons-material/Clear';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-
-function ClearableTextField({ value, onChange, ...props }) {
-    return (
-        <TextField
-            value={value}
-            onChange={onChange}
-            slotProps={{
-                input: {
-                    endAdornment: value && (
-                        <InputAdornment position="end">
-                            <IconButton
-                                aria-label="clear field"
-                                onClick={() => onChange({ target: { value: '' } })}
-                                edge="end"
-                            >
-                                <ClearIcon />
-                            </IconButton>
-                        </InputAdornment>
-                    ),
-                },
-            }}
-            {...props}
-        />
-    );
-}
 
 export default function RegisterScreen(){
     const [formData, setFormData] = useState({

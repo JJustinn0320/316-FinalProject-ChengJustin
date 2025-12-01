@@ -7,9 +7,10 @@ import {
     HomeWrapper,
     LoginScreen,
     RegisterScreen,
-    PlaylistScreen,
     EditAccountScreen,
-} from './components/index'
+    PlaylistScreen,
+    SongCatalogScreen
+} from './components'
 const App = () => {  
   return (
         <BrowserRouter>            
@@ -20,6 +21,7 @@ const App = () => {
               <Route path="/register/" element={<RegisterScreen />} />
               <Route path="/edit/" element={<EditAccountScreen />} />
               <Route path="/playlists/" element={<PlaylistScreen />} />
+              <Route path="/songs/" element={<SongCatalogScreen />} />
           </Routes>
         </BrowserRouter>
     )

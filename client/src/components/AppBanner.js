@@ -24,6 +24,12 @@ export default function AppBanner(){
     function handleHome(){
         navigate('/')
     }
+    function handlePlaylist(){
+        navigate('/playlists/')
+    }
+    function handleSongs(){
+        navigate('/songs/')
+    }
     function handleLogin(){
         handleClose()
         navigate('/login/')
@@ -57,8 +63,8 @@ export default function AppBanner(){
                     <IconButton edge='start' aria-label="account-circle" onClick={handleHome}>
                         <HomeOutlinedIcon sx={{ border: '3.5px solid white', color: "white", fontSize: 40, borderRadius: '50%' }}/>
                     </IconButton>
-                    <Button variant="text" sx={buttonStyle}>Playlists</Button>
-                    <Button variant="text" sx={buttonStyle}>Songs Catalog</Button>
+                    <Button variant="text" sx={buttonStyle} onClick={handlePlaylist}>Playlists</Button>
+                    <Button variant="text" sx={buttonStyle} onClick={handleSongs}>Songs Catalog</Button>
                     
                 </div>
                 <IconButton 

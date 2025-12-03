@@ -3,7 +3,7 @@ import ClearableTextField from "./ClearableTextField";
 import Copyright from "./Copyright";
 import EditAccountScreen from "./EditAccountScreen";
 import HomeWrapper from "./HomeWrapper";
-import ListCard from "./ListCard";
+import PlaylistCard from "./PlaylistCard";
 import LoginScreen from "./LoginScreen";
 import PlaylistScreen from "./PlaylistScreen";
 import RegisterScreen from "./RegisterScreen";
@@ -17,7 +17,7 @@ export {
     Copyright,
     EditAccountScreen,
     HomeWrapper,
-    ListCard,
+    PlaylistCard,
     LoginScreen,
     PlaylistScreen,
     RegisterScreen,

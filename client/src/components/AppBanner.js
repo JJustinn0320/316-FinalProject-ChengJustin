@@ -9,6 +9,8 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import Button from'@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 
 export default function AppBanner(){
     const [anchorEl, setAnchorEl] = useState(null)
@@ -59,14 +61,14 @@ export default function AppBanner(){
     return (
         <AppBar position='static' sx={{ backgroundColor: '#f26fcf' }}>
             <Toolbar variant='dense' sx={{ justifyContent: 'space-between' }}>
-                <div>
+                <Box>
                     <IconButton edge='start' aria-label="account-circle" onClick={handleHome}>
                         <HomeOutlinedIcon sx={{ border: '3.5px solid white', color: "white", fontSize: 40, borderRadius: '50%' }}/>
                     </IconButton>
                     <Button variant="text" sx={buttonStyle} onClick={handlePlaylist}>Playlists</Button>
                     <Button variant="text" sx={buttonStyle} onClick={handleSongs}>Songs Catalog</Button>
-                    
-                </div>
+                </Box>
+                <Typography sx={{ mr: 34, fontSize: 24 }}>The Playlister</Typography>
                 <IconButton 
                     edge='end' 
                     aria-label="account-circle" 

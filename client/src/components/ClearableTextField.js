@@ -16,11 +16,10 @@ export default function ClearableTextField({ value, onChange, ...props }) {
                     endAdornment: value && (
                         <InputAdornment position="end">
                             <IconButton
-                                aria-label="clear field"
                                 onClick={() => onChange({ target: { value: '' } })}
                                 edge="end"
                             >
-                                <ClearIcon />
+                            <ClearIcon />
                             </IconButton>
                         </InputAdornment>
                     ),

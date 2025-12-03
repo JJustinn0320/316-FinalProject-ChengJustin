@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 
-import ClearableTextField from './ClearableTextField';
+import { ClearableTextField, PlaylistCard } from './index'
+import { GlobalStoreContext } from '../store';
 
 import Box from "@mui/material/Box"
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
 
 export default function PlaylistScreen() {
     const [formData, setFormData] = useState({
@@ -13,11 +15,23 @@ export default function PlaylistScreen() {
         username: '',
         songTitle: '',
         songArtist: '',
-        SongYear: ''
+        songYear: ''
     });
 
+    const { store } = useContext(GlobalStoreContext);
+
+    const hasLoaded = useRef(false); // Track if we've already loaded
+    
+    useEffect(() => {
+        // Only load once
+        if (store && !hasLoaded.current) {
+            hasLoaded.current = true;
+            store.loadIdNamePairs();
+        }
+    }, [store]); // store in deps, but ref prevents re-fetching
+
     const handleChange = (field) => (event) => {
-        if (field === 'SongYear'){
+        if (field === 'songYear'){
             if (/^\d*$/.test( event.target.value))
             setFormData(prev => ({
                 ...prev,
@@ -38,7 +52,7 @@ export default function PlaylistScreen() {
             username: '',
             songTitle: '',
             songArtist: '',
-            SongYear: ''
+            songYear: ''
         })
     }
 
@@ -54,6 +68,13 @@ export default function PlaylistScreen() {
         fontSize: 15,  
         minWidth: 100
     }
+    const listItems = store?.idNamePairs?.map((pair) => (
+        <PlaylistCard
+            key={pair._id}
+            idNamePair={pair}
+        />
+    )) || null;
+
     return (
         <div id="playlist-screen">
             <Box
@@ -65,11 +86,12 @@ export default function PlaylistScreen() {
             >
                 <Box
                     sx={{
-                        width: '40%',
+                        width: '30%',
+                        p: 2
                     }}
                 >
                     <Typography variant="h2" gutterBottom sx={{
-                        mt: 4,
+                        mt: 2,
                         color: '#f26fcf'
                     }}>
                         Playlists
@@ -126,9 +148,9 @@ export default function PlaylistScreen() {
                         backgroundColor: 'pink'
                     }}
                 >
-                    <Stack spacing={2}>
-                        dwa
-                    </Stack>
+                    <List>
+                        {listItems}
+                    </List>
                 </Box>
             </Box>
         </div>

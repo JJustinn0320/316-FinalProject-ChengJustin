@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 const ObjectId = Schema.Types.ObjectId
 
 const songSchema = new Schema({
+    ownerEmail: {type: String, required: true},
     title: {type: String, required: true},
     artist: {type: String, required: true},
     year: {type: Number, required: true},

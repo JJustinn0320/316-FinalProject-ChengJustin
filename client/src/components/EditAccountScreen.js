@@ -28,9 +28,6 @@ export default function EditAccountScreen(){
     }
 
     const navigate = useNavigate();
-    function handleLogin(){
-        navigate('/login/')
-    }
 
     const buttonStyle = {
         color: "white", 

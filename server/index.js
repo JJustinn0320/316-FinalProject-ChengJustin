@@ -2,28 +2,33 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const express = require('express')
 const cors = require('cors')
+const cookieParser = require('cookie-parser')
 
 // creates express app
 const app = express()
-app.use(express.urlencoded({ extended: true }))
-app.use(cors())
-app.use(express.json())
 
 // middleware
-app.use(express.urlencoded({ extended: true }))
 app.use(cors({
-    origin: ["http://localhost:3000"],
-    credentials: true
-}))
-app.use(express.json())
+    origin: "http://localhost:3000", // Your frontend URL
+    credentials: true, // Allow cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// 2. Body parsers (to read req.body)
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// 3. Cookie parser (to read req.cookies)
+app.use(cookieParser());
 
 // routes
 const playlistRoutes = require('./routes/playlists-router')
 app.use('/api/playlist-store', playlistRoutes)
 // const songRoutes = require('./routes/songs-router')
 // app.use('/api/songs-store', songRoutes)
-// const authRoutes = require('./routes/auth-router')
-// app.use('/api/users-store', authRoutes)
+const authRoutes = require('./routes/auth-router')
+app.use('/api/auth', authRoutes)
 
 // connect to db
 mongoose.connect(process.env.MONGODB_URI)

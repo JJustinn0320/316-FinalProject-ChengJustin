@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {Copyright, ClearableTextField} from './index'
+
+import {Copyright, ClearableTextField, MUIErrorModal} from './index'
+import AuthContext from '../auth'
 
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -8,11 +10,11 @@ import Button from'@mui/material/Button';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 export default function RegisterScreen(){
+    const { auth } = useContext(AuthContext)
+
     const [formData, setFormData] = useState({
-        username: '',
         email: '',
         password: '',
-        passwordConfirm: ''
     });
 
     const handleChange = (field) => (event) => {
@@ -25,6 +27,13 @@ export default function RegisterScreen(){
     function handleSubmit(event){
         event.preventDefault();
         console.log("Form Data:", formData);
+
+        auth.loginUser(formData.email, formData.password)
+    }
+
+    let modalJSX = ""
+    if (auth.errorMessage !== null){
+        modalJSX = <MUIErrorModal />;
     }
 
     const navigate = useNavigate();
@@ -54,18 +63,16 @@ export default function RegisterScreen(){
                 >
                     <Stack spacing={2}>
                         <ClearableTextField
-                            required
                             name="email"
-                            label="Email"
+                            label="Email*"
                             autoComplete="email"
                             value={formData.email}
                             onChange={handleChange('email')}
                         />
                         <ClearableTextField 
-                            required
                             name="password"
                             type="password"
-                            label="Password"
+                            label="Password*"
                             autoComplete='password'
                             value={formData.password}
                             onChange={handleChange('password')}
@@ -83,6 +90,7 @@ export default function RegisterScreen(){
                     </Stack>
                 </Box>
                 <Copyright sx={{mt: '5', p: 5}}/>
+                {modalJSX}
             </center>
         </div>
     )

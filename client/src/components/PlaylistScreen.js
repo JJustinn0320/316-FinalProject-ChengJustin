@@ -72,6 +72,7 @@ export default function PlaylistScreen() {
         <PlaylistCard
             key={pair._id}
             idNamePair={pair}
+            username={"hello"}
         />
     )) || null;
 

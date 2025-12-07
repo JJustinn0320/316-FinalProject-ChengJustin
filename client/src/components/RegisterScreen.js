@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {Copyright, ClearableTextField} from './index'
+
+import {Copyright, ClearableTextField, MUIErrorModal} from './index'
+import AuthContext from '../auth'
 
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -8,6 +10,8 @@ import Button from'@mui/material/Button';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 export default function RegisterScreen(){
+    const { auth } = useContext(AuthContext);
+
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -25,6 +29,19 @@ export default function RegisterScreen(){
     function handleSubmit(event){
         event.preventDefault();
         console.log("Form Data:", formData);
+
+        auth.registerUser(
+            formData.username,
+            formData.email,
+            "formData.avatar",
+            formData.password,
+            formData.passwordConfirm
+        );
+    }
+
+    let modalJSX = ""
+    if (auth.errorMessage !== null){
+        modalJSX = <MUIErrorModal />;
     }
 
     const navigate = useNavigate();
@@ -54,35 +71,31 @@ export default function RegisterScreen(){
                 >
                     <Stack spacing={2}>
                         <ClearableTextField
-                            required
                             name="username"
-                            label="Username"
+                            label="Username*"
                             autoComplete='username'
                             value={formData.username}
                             onChange={handleChange('username')}
                         />
                         <ClearableTextField
-                            required
                             name="email"
-                            label="Email"
+                            label="Email*"
                             autoComplete="email"
                             value={formData.email}
                             onChange={handleChange('email')}
                         />
                         <ClearableTextField 
-                            required
                             name="password"
                             type="password"
-                            label="Password"
+                            label="Password*"
                             autoComplete='new-password'
                             value={formData.password}
                             onChange={handleChange('password')}
                         />
                         <ClearableTextField 
-                            required
                             name="passwordConfirm"
                             type="password"
-                            label="Password Confirm"
+                            label="Password Confirm*"
                             autoComplete='new-password'
                             value={formData.passwordConfirm}
                             onChange={handleChange('passwordConfirm')}
@@ -100,6 +113,7 @@ export default function RegisterScreen(){
                     </Stack>
                 </Box>
                 <Copyright sx={{mt: '5', p: 5}}/>
+                { modalJSX }
             </center>
         </div>
     )

@@ -5,6 +5,7 @@ import EditAccountScreen from "./EditAccountScreen";
 import HomeWrapper from "./HomeWrapper";
 import PlaylistCard from "./PlaylistCard";
 import LoginScreen from "./LoginScreen";
+import MUIErrorModal from "./MUIErrorModal";
 import PlaylistScreen from "./PlaylistScreen";
 import RegisterScreen from "./RegisterScreen";
 import SongCard from "./SongCard";
@@ -19,6 +20,7 @@ export {
     HomeWrapper,
     PlaylistCard,
     LoginScreen,
+    MUIErrorModal,
     PlaylistScreen,
     RegisterScreen,
     SongCard,

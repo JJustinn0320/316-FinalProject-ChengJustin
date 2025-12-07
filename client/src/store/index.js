@@ -1,26 +1,45 @@
-import { createContext, useState } from 'react'
+import { createContext, useState, useContext } from 'react'
 
 import storeRequestSender from './requests'
+import AuthContext from '../auth'
 
 export const GlobalStoreContext = createContext({});
 
 export const GlobalStoreActionType = {
     LOAD_ID_NAME_PAIRS: 'LOAD_ID_NAME_PAIRS',
+    HIDE_MODALS: "HIDE_MODALS"
+}
+
+const CurrentModal = {
+    NONE: "NONE",
+    ERROR: "ERROR"
 }
 
 function GlobalStoreContextProvider(props) {
     const [store, setStore] = useState({
         idNamePairs: null,
+        currentModal: CurrentModal.NONE
     })
+
+    const { auth } = useContext(AuthContext);
 
     const storeReducer = (action) => {
         const { type, payload } = action;
         switch (type) {
             case GlobalStoreActionType.LOAD_ID_NAME_PAIRS: {
                 return setStore({
-                    idNamePairs: payload
+                    idNamePairs: payload,
+                    currentModal: CurrentModal.NONE
                 })
             }
+            case GlobalStoreActionType.HIDE_MODALS: {
+                return setStore({
+                    idNamePairs: store.idNamePairs,
+                    currentModal: CurrentModal.NONE
+                })
+            }
+            default:
+                return store
         }
     }
 
@@ -36,6 +55,13 @@ function GlobalStoreContextProvider(props) {
         else {
             console.log("FAILED TO GET THE LIST PAIRS");
         }
+    }
+    store.hideModals = () => {
+        auth.errorMessage = null;
+        storeReducer({
+            type: GlobalStoreActionType.HIDE_MODALS,
+            payload: {}
+        });    
     }
 
     return (

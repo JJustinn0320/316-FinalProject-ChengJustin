@@ -130,7 +130,9 @@ const logoutUser = async (req, res) => {
 }
 
 const getLoggedIn = async (req, res) => {
-    console("getLoggedIn")
+    console.log('=== GET LOGGED IN ===');
+    console.log('Cookies received:', req.cookies);
+    console.log('Token in cookies:', req.cookies?.token?.substring(0, 30) + '...');
     try {
         let userId = auth.verifyUser(req);
         if (!userId) {
@@ -147,6 +149,7 @@ const getLoggedIn = async (req, res) => {
         return res.status(200).json({
             loggedIn: true,
             user: {
+                id: loggedInUser._id,
                 username: loggedInUser.username,
                 email: loggedInUser.email
             }

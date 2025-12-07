@@ -25,10 +25,12 @@ app.use(cookieParser());
 // routes
 const playlistRoutes = require('./routes/playlists-router')
 app.use('/api/playlist-store', playlistRoutes)
-// const songRoutes = require('./routes/songs-router')
-// app.use('/api/songs-store', songRoutes)
+const songRoutes = require('./routes/songs-router')
+app.use('/api/song-store', songRoutes)
 const authRoutes = require('./routes/auth-router')
 app.use('/api/auth', authRoutes)
+const userRoutes = require('./routes/user-router')
+app.use('/api/user', userRoutes)
 
 // connect to db
 mongoose.connect(process.env.MONGODB_URI)

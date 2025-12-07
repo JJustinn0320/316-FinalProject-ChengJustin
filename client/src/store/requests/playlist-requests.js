@@ -26,10 +26,24 @@ api.interceptors.response.use(
   }
 );
 
-export const getPlaylistPairs = () => api.get(`/playlistpairs/`)
+export const getPlaylistArray = () => api.get(`/playlistArray/`)
+export const createPlaylist = (newListName, username, userEmail, newSongs, newListens, guestHasListened) => {
+  return api.post(`/playlist/`, {
+      // SPECIFY THE PAYLOAD
+      name: newListName,
+      ownerUsername: username,
+      ownerEmail: userEmail,
+      songs: newSongs,
+      listens: newListens,
+      guestHasListened: guestHasListened
+  })
+}
+export const getPlaylistById = (id) => api.get(`/playlist/${id}`)
 
 const apis = {
-    getPlaylistPairs,
+    getPlaylistArray,
+    createPlaylist,
+    getPlaylistById,
 }
 
 export default apis

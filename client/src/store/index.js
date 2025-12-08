@@ -11,6 +11,7 @@ export const GlobalStoreActionType = {
     LOAD_PLAYLISTS: 'LOAD_PLAYLISTS',
     LOAD_SONGS: 'LOAD_SONGS',
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
+    DELETE_PLAYLIST: 'DELETE_PLAYLIST',
     CREATE_NEW_SONG: 'CREATE_NEW_SONG',
     EDIT_SONG: 'EDIT_SONG',
     DELETE_SONG: 'DELETE_SONG',
@@ -21,6 +22,7 @@ export const GlobalStoreActionType = {
 
 export const CurrentModal = {
     NONE: "NONE",
+    DELETE_PLAYLIST: "DELETE_PLAYLIST",
     CREATE_SONG: "CREATE_SONG",
     EDIT_SONG: "EDITING_SONG",
     DELETE_SONG: "DELETE_SONG",
@@ -72,6 +74,14 @@ function GlobalStoreContextProvider(props) {
                     return {
                         ...prevStore,
                         playlistArray: updatedPlaylistArray,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.DELETE_PLAYLIST: {
+                    const newPlaylistArray = prevStore.playlistArray.filter(playlistArray => playlistArray._id.toString() !== payload._id.toString());
+                    return {
+                        ...prevStore,
+                        playlistArray: newPlaylistArray,
                         currentModal: CurrentModal.NONE
                     }
                 }
@@ -176,6 +186,44 @@ function GlobalStoreContextProvider(props) {
             console.log("Failed to Create a New Playlist: ", error)
         }
     }
+    store.deletePlaylist = async function(id) {
+        console.log("del Playlist")
+
+        try{
+            const response = await PlaylistRequestSender.deletePlaylist(id);
+            console.log(response)
+            if(response.status === 200){
+                console.log('staus 200')
+                let oldPlaylist = response.data.playlist;
+                console.log(oldPlaylist)
+                // Update store 
+                storeReducer({
+                    type: GlobalStoreActionType.DELETE_PLAYLIST,
+                    payload: oldPlaylist
+                });
+                this.loadPlaylistArray()
+                return { 
+                    success: true, 
+                    song: oldPlaylist
+                };
+            }
+            else{
+                console.log("Backend returned error:", response);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to create song"
+                };
+            }
+        }
+        catch (error){
+            console.log("Failed to Delete Playlist:", error);
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+        }
+    }
+
 
     // ==============
     // SONG FUNCTIONS

@@ -57,10 +57,65 @@ const createPlaylist = async (req, res) => {
     }
 }
 const deletePlaylist = async (req, res) => {
+    console.log('del playlist')
+    let userId = auth.verifyUser(req)
     if(auth.verifyUser(req) === null){
         return res.status(400).json({
             errorMessage: 'UNAUTHORIZED'
         })
+    }
+    console.log('verified')
+
+    try{
+        const { playlistId } = req.params
+
+        // find playlist
+        const playlist = await Playlist.findById(playlistId)
+        if (!playlist) {
+            return res.status(404).json({ 
+                success: false,
+                error: "PLAYLIST_NOT_FOUND",
+                message: "Playlist not found" 
+            });
+        }
+        console.log('found playlist')
+        // check owner
+        const user = await User.findById(userId)
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+        if (playlist.ownerEmail !== user.email) {
+            return res.status(403).json({ 
+                success: false,
+                error: "UNAUTHORIZED",
+                message: "You don't own this song" 
+            });
+        }
+        console.log('user good')
+        // remove playlist from users
+        // 1. Delete the song itself
+        const oldPlaylist = await Playlist.findByIdAndDelete(playlistId);
+        console.log('playlist del')
+        // 2. Remove song from all users
+        await User.updateMany(
+            { playlists: playlistId },
+            { $pull: { playlists: playlistId } }
+        );
+        console.log('update user')
+        res.status(200).json({
+            success: true, 
+            playlist: oldPlaylist,
+            message: "playlist delet successfully"
+        })
+    }
+    catch{
+        console.error("Error del play:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to del play" 
+        });
     }
 }
 

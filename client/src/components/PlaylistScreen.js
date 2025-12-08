@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 
 import { ClearableTextField, PlaylistCard } from './index'
-import { GlobalStoreContext } from '../store';
+import { CurrentModal, GlobalStoreContext } from '../store';
 import AuthContext from '../auth';
 
 import Box from "@mui/material/Box"
@@ -9,6 +9,45 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List';
+import Modal from '@mui/material/Modal';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+
+const buttonStyle = {
+    mr: 2, 
+    color: "white", 
+    backgroundColor: "#bd27bdff", 
+    borderRadius: '16px',
+    fontSize: 15,  
+    minWidth: 100,
+    maxHeight: 45,
+}
+const buttonStyle2 = {
+    mr: 2, 
+    color: "white", 
+    backgroundColor: "#1c1c1dff", 
+    borderRadius: '16px',
+    fontSize: 15,  
+    minWidth: 100,
+    maxHeight: 45,
+    '&.Mui-disabled': {           
+        color: '#888888',           // text color
+        backgroundColor: '#cccccc', // grey background
+    }
+}
+const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)', 
+    width: 600,
+    bgcolor: '#30c071ff',
+    border: '2px solid #000',
+    boxShadow: 24,
+    borderRadius: 2,
+    maxWidth: '90vw',
+    maxHeight: '90vh', 
+}
 
 export default function PlaylistScreen() {
     const [formData, setFormData] = useState({
@@ -23,7 +62,6 @@ export default function PlaylistScreen() {
     const { auth } = useContext(AuthContext)
 
     const hasLoaded = useRef(false); // Track if we've already loaded
-    
     useEffect(() => {
         // Only load once
         if (store && !hasLoaded.current) {
@@ -50,7 +88,6 @@ export default function PlaylistScreen() {
             }));
         }
     };
-
     const handleClear = () => {
         setFormData({
             playlistName: '',
@@ -69,7 +106,6 @@ export default function PlaylistScreen() {
             sortBy: 'name'
         })
     }
-
     const handleSearch = () => {
         console.log(formData)
         setFilters({
@@ -88,14 +124,32 @@ export default function PlaylistScreen() {
         store.loadPlaylistArray();
     }
 
-    const buttonStyle = {
-        mr: 2, 
-        color: "white", 
-        backgroundColor: "#bd27bdff", 
-        borderRadius: '16px',
-        fontSize: 15,  
-        minWidth: 100,
-        maxHeight: 45,
+    const [selectedPlaylist, setSelectedPlaylist] = useState(null)
+    const [error, setError] = useState(null)
+    useEffect(() => {
+        if (selectedPlaylist) {
+            console.log(selectedPlaylist._id)
+        }
+    }, [selectedPlaylist]);
+    const handleDeleteCancel = () => {
+        store.hideModals();
+        setError(null); // Clear any previous errors
+    }
+    const handleDeleteConfirm = async () => {
+        const result = await store.deletePlaylist(selectedPlaylist?._id)
+        if (result.success) {
+            console.log("playlist del successfully!");
+           
+            setError(null); // Clear any previous errors
+        } else {
+            console.error("Failed to del playlist:", result);
+            // Show error in modal
+            setError({
+                title: "del playlist Failed",
+                message: result.message || "Unknown error",
+                type: result.error || "UNKNOWN_ERROR"
+            });
+        }
     }
 
     const [filters, setFilters] = useState({
@@ -145,6 +199,11 @@ export default function PlaylistScreen() {
             <PlaylistCard
                 key={playlist._id}
                 playlist={playlist}
+                onDelete={() => {
+                    store.openModal(CurrentModal.DELETE_PLAYLIST) // open edit modal
+                }}
+                selected={selectedPlaylist?._id === playlist._id}
+                onClick={() => setSelectedPlaylist(playlist)}
             />
         )) || null;
 
@@ -270,6 +329,44 @@ export default function PlaylistScreen() {
                     >⊕ New Playlist</Button>
                 </Box>
             </Box>
+            <Modal open={store.currentModal === CurrentModal.DELETE_PLAYLIST}>
+                <Box sx={{...style, height: error ? 550 : 450, display:"flex", flexDirection: 'column'}}>
+                    {/* Error Display */}
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 0}}>
+                            <AlertTitle>{error.title}</AlertTitle>
+                            {error.message}
+                        </Alert>
+                    )}
+                    <Box sx={{
+                        backgroundColor: '#035803ff',
+                        color: 'white',
+                        p: 2,
+                        mb:1,
+                    }}>
+                        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                            Delete Song
+                        </Typography>
+                        
+                    </Box>
+                    <Box sx={{flexGrow:1}}>
+                        <Typography variant="h5" component="h2" sx={{ p:2, fontWeight: 'bold' }}>
+                            Are you sure you want to remove the playlist {selectedPlaylist?.name} from the catalog 
+                        </Typography>
+                        <Typography sx={{p:2}}>
+                            Doing so means it will be permanently removed
+                        </Typography>
+                    </Box>
+                    <Box sx={{
+                        display:"flex",
+                        justifyContent: "space-between"
+                    }}>
+                        
+                        <Button sx={{...buttonStyle2, p:2, ml:2, mb:2,}} onClick={handleDeleteConfirm}>Confirm</Button>
+                        <Button sx={{...buttonStyle2, p:2, mr:2, mb:2,}} onClick={handleDeleteCancel}>Cancel</Button>
+                    </Box> 
+                </Box>
+            </Modal>
         </div>
     )
 }

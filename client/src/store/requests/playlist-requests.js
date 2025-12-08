@@ -45,12 +45,14 @@ export const addSongToPlaylist = (playlistId, songId) => {
 export const removeSongFromPlaylist = (playlistId, songId) => {
     return api.delete(`/${playlistId}/songs/${songId}`);
 };
+export const deletePlaylist = (playlistId) => api.delete(`/playlist/${playlistId}`)
 const apis = {
     getPlaylistArray,
     createPlaylist,
     getPlaylistById,
     addSongToPlaylist,
-    removeSongFromPlaylist
+    removeSongFromPlaylist,
+    deletePlaylist
 }
 
 export default apis

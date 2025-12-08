@@ -39,11 +39,18 @@ export const createPlaylist = (newListName, username, userEmail, newSongs, newLi
   })
 }
 export const getPlaylistById = (id) => api.get(`/playlist/${id}`)
-
+export const addSongToPlaylist = (playlistId, songId) => {
+    return api.post(`/${playlistId}/songs`, { songId });
+};
+export const removeSongFromPlaylist = (playlistId, songId) => {
+    return api.delete(`/${playlistId}/songs/${songId}`);
+};
 const apis = {
     getPlaylistArray,
     createPlaylist,
     getPlaylistById,
+    addSongToPlaylist,
+    removeSongFromPlaylist
 }
 
 export default apis

@@ -11,12 +11,12 @@ const createSong = async (req, res) => {
     console.log("create Song")
     let id = auth.verifyUser(req)
     console.log(id)
-    // if(auth.verifyUser(req) === null){
-    //     return res.status(400).json({
-    //         errorMessage: 'UNAUTHORIZED'
-    //     })
-    // }
-    // console.log('verified')
+    if(auth.verifyUser(req) === null){
+        return res.status(400).json({
+            errorMessage: 'UNAUTHORIZED'
+        })
+    }
+    console.log('verified')
     const { ownerUsername, ownerEmail, title, artist, year, youTubeId, listens, playlists } = req.body
 
     console.log(req.body)

@@ -12,6 +12,8 @@ export const GlobalStoreActionType = {
     LOAD_SONGS: 'LOAD_SONGS',
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
     CREATE_NEW_SONG: 'CREATE_NEW_SONG',
+    ADD_SONG_TO_PLAYLIST: 'ADD_SONG_TO_PLAYLIST',
+    OPEN_MODAL: 'OPEN_MODAL',
     HIDE_MODALS: "HIDE_MODALS"
 }
 
@@ -56,6 +58,16 @@ function GlobalStoreContextProvider(props) {
                         ...prevStore,
                         playlistArray: newPlaylistArray,
                         newListCounter: prevStore.newListCounter + 1,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.ADD_SONG_TO_PLAYLIST: {
+                    const updatedPlaylistArray = prevStore.playlistArray.map(playlist => 
+                        playlist._id === payload._id ? payload : playlist
+                    );
+                    return {
+                        ...prevStore,
+                        playlistArray: updatedPlaylistArray,
                         currentModal: CurrentModal.NONE
                     }
                 }
@@ -141,6 +153,7 @@ function GlobalStoreContextProvider(props) {
             console.log("Failed to Create a New Playlist: ", error)
         }
     }
+
     // ==============
     // SONG FUNCTIONS
     // ==============
@@ -193,6 +206,42 @@ function GlobalStoreContextProvider(props) {
              
         }
     };
+
+    // =======================
+    // SONG-PLAYLIST FUNCTIONS
+    // =======================
+    store.addSongToPlaylist = async (PlaylistId, SongId) => {
+        console.log('store.addSongToPlaylist')
+        try{
+            const response = await PlaylistRequestSender.addSongToPlaylist(PlaylistId, SongId)
+            if (response.status === 200) {
+                let updatedPlaylist = response.data.playlist;
+                storeReducer({
+                    type: GlobalStoreActionType.ADD_SONG_TO_PLAYLIST,
+                    payload: updatedPlaylist
+                })
+
+                return { 
+                    success: true, 
+                };
+            }
+            else{
+                console.log("Backend returned error:", response.data);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to add song to playlist"
+                };
+            }
+        }
+        catch (error){
+            console.log("Failed to Create a New Song:", error);
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+        }
+    }
+
 
     // ==============
     // USER FUNCTIONS

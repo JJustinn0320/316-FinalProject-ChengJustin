@@ -9,5 +9,7 @@ router.patch('/playlist/:id', PlaylistController.editPlaylist)
 router.get('/playlists', PlaylistController.getPlaylists)
 router.get('/playlist/:id', PlaylistController.getPlaylistById)
 router.get('/playlistArray', PlaylistController.getPlaylistArray)
+router.post('/:playlistId/songs', PlaylistController.addSongToPlaylist);
+router.delete('/:playlistId/songs/:songId', PlaylistController.removeSongFromPlaylist);
 
 module.exports = router

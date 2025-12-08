@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Playlist = require('../models/playlist-model')
 const User = require('../models/user-model')
-//const Song = require('../models/song-model')
+const Song = require('../models/song-model')
 const auth = require('../auth')
 
 const createPlaylist = async (req, res) => {
@@ -56,7 +56,6 @@ const createPlaylist = async (req, res) => {
         res.status(400).json({error: error.message})
     }
 }
-
 const deletePlaylist = async (req, res) => {
     if(auth.verifyUser(req) === null){
         return res.status(400).json({
@@ -87,35 +86,141 @@ const getPlaylistArray = async (req, res) => {
     //         errorMessage: 'UNAUTHORIZED'
     //     })
     // }
-    console.log("Available mongoose models:", Object.keys(mongoose.models));
+    // console.log("Available mongoose models:", Object.keys(mongoose.models));
     const playlists = await Playlist.find({})
         .populate('songs') // Populate song objects
         .exec();
-        
-    // if (!playlists || playlists.length === 0) {
-    //     console.log("!playlists.length");
-    //     return res.status(200).json({ success: true, playlistArray: [] });
-    // }
-
-    // console.log("Send the Playlist pairs");
-    // // PUT ALL THE LISTS INTO ID, NAME PAIRS
-    // let array = [];
-    // for (let key in playlists) {
-    //     let list = playlists[key];
-        
-    //     // FIX: Make sure we include the ID
-    //     let playlist = {
-    //         _id: list._id,  // Use whichever ID property exists
-    //         name: list.name,
-    //         ownerUsername: list.ownerUsername,
-    //         ownerEmail: list.ownerEmail,
-    //         songs: list.songs
-    //     };
-    //     array.push(playlist);
-    // }
     
     // console.log("Final list:", playlists); // Debug the output
     return res.status(200).json({ success: true, playlistArray: playlists });
+}
+
+const addSongToPlaylist = async (req, res) => {
+    console.log('play-control addSongToPlaylist')
+    try {
+        const { playlistId } = req.params;
+        const { songId } = req.body;
+        const userId = auth.verifyUser(req) 
+
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.status(404).json({ 
+                success: false,
+                error: "PLAYLIST_NOT_FOUND",
+                message: "Playlist not found" 
+            });
+        }
+
+        // Check ownership 
+        const user = await User.findById(userId);
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+        if (playlist.ownerEmail !== user.email) {
+            return res.status(403).json({ 
+                success: false,
+                error: "UNAUTHORIZED",
+                message: "You don't own this playlist" 
+            });
+        }
+
+        //Check if song exists
+        const song = await Song.findById(songId);
+        if (!song) {
+            return res.status(404).json({ 
+                success: false,
+                error: "SONG_NOT_FOUND",
+                message: "Song not found" 
+            });
+        }
+
+        // Check if song already in playlist
+        if (playlist.songs.includes(songId)) {
+            return res.status(400).json({ 
+                success: false,
+                error: "SONG_ALREADY_IN_PLAYLIST",
+                message: "This song is already in the playlist" 
+            });
+        }
+
+        playlist.songs.push(songId);
+        await playlist.save();
+
+        const updatedPlaylist = await Playlist.findById(playlistId)
+            .populate('songs')
+            .exec();
+        
+        res.status(200).json({ 
+            success: true,
+            playlist: updatedPlaylist,
+            message: "Song added to playlist successfully" 
+        });
+    } catch (error) {
+        console.error("Error adding song to playlist:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to add song to playlist" 
+        });
+    }
+}
+
+const removeSongFromPlaylist = async (req, res) => {
+    try{
+        const { playlistId, songId } = req.params;
+        // Find playlist
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.status(404).json({
+                success: false,
+                error: "PLAYLIST_NOT_FOUND",
+                message: "Playlist not found"
+            });
+        }
+        
+        // Check ownership 
+        if (playlist.ownerEmail !== auth.user.email) {
+            return res.status(403).json({
+                success: false,
+                error: "UNAUTHORIZED",
+                message: "You don't own this playlist"
+            });
+        }
+        
+        // Check if song exists in playlist
+        if (!playlist.songs.includes(songId)) {
+            return res.status(400).json({
+                success: false,
+                error: "SONG_NOT_IN_PLAYLIST",
+                message: "Song is not in this playlist"
+            });
+        }
+        
+        //Remove song from playlist
+        playlist.songs = playlist.songs.filter(id => id.toString() !== songId);
+        await playlist.save();
+        
+        
+        // 6. Return updated playlist
+        const updatedPlaylist = await Playlist.findById(playlistId)
+            .populate('songs')
+            .exec();
+            
+        res.json({
+            success: true,
+            playlist: updatedPlaylist,
+            message: "Song removed from playlist"
+        });
+    }
+    catch (error){
+        console.error("Error deleting song to playlist:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to delete song to playlist" 
+        });
+    }
 }
 
 module.exports = {
@@ -124,5 +229,7 @@ module.exports = {
     editPlaylist,
     getPlaylists,
     getPlaylistById,
-    getPlaylistArray
+    getPlaylistArray,
+    addSongToPlaylist,
+    removeSongFromPlaylist
 }

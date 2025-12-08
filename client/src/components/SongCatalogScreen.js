@@ -134,24 +134,36 @@ export default function SongCatalogScreen() {
         )) || null;
 
     const handleCreateSong = async (songData) => {
-        try{
-            const newSong = await store.createSong(
-                songData.title,
-                songData.artist,
-                songData.year,
-                songData.youTubeId
-            )
-
-            await store.loadSongArray(); 
+        console.log("handleCreateSong called with:", songData);
+        
+        // Call store method
+        const result = await store.createSong(
+            songData.title,
+            songData.artist,
+            songData.year,
+            songData.youTubeId
+        );
+        
+        console.log("Store createSong result:", result);
+        
+        if (result.success) {
             
+            console.log("Song created successfully:", result.song);
             store.hideModals();
-            return { success: true, song: newSong };
+            return { 
+                success: true, 
+                song: result.song 
+            };
+        } else {
+            // Error - return it to modal
+            console.log("Failed to create song:", result);
+            return { 
+                success: false, 
+                error: result.error,
+                message: result.message
+            };
         }
-        catch (error) {
-            console.error("Failed to create song:", error);
-            return { success: false, error: error.message };
-        }
-    }
+    };
 
     return (
         <div id="songs-catalog-screen">
@@ -266,7 +278,8 @@ export default function SongCatalogScreen() {
                 
             </Box>
             <MUICreateSongModal
-                onCreateSong={handleCreateSong}/>
+                onCreateSong={handleCreateSong}
+                />
         </div>
     )
 }

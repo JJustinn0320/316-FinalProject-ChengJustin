@@ -26,7 +26,7 @@ function GlobalStoreContextProvider(props) {
         playlistArray: [],
         songArray: [],
         newListCounter: 0,
-        currentModal: CurrentModal.NONE
+        currentModal: CurrentModal.NONE,
     })
 
     const { auth } = useContext(AuthContext);
@@ -39,14 +39,14 @@ function GlobalStoreContextProvider(props) {
                     return {
                         ...prevStore,
                         playlistArray: payload,
-                        currentModal: CurrentModal.NONE
+                        currentModal: CurrentModal.NONE,
                     }
                 }
                 case GlobalStoreActionType.LOAD_SONGS: {
                     return {
                         ...prevStore,
                         songArray: payload,
-                        currentModal: CurrentModal.NONE
+                        currentModal: CurrentModal.NONE,
                     }
                 }
                 case GlobalStoreActionType.CREATE_NEW_LIST: {
@@ -76,7 +76,7 @@ function GlobalStoreContextProvider(props) {
                 case GlobalStoreActionType.HIDE_MODALS: {
                     return {
                         ...prevStore,
-                        currentModal: CurrentModal.NONE
+                        currentModal: CurrentModal.NONE,
                     }
                 }
                 default:
@@ -158,24 +158,41 @@ function GlobalStoreContextProvider(props) {
         }
     }
     store.createSong = async function(title, artist, year, youTubeId) {
-        try{
+        try {
             const response = await SongRequestSender.createSong(title, artist, year, youTubeId, 0, 0, auth.user.username, auth.user.email);
-            if(response.status === 201){
+            
+            console.log("Create song response:", response);
+            
+            if (response.status === 201) {
                 let newSong = response.data.song;
+                
+                // Update store 
                 storeReducer({
                     type: GlobalStoreActionType.CREATE_NEW_SONG,
                     payload: newSong
                 });
-
-                this.loadSongArray()
-                this.hideModals()
-                return newSong
+                
+                return { 
+                    success: true, 
+                    song: newSong 
+                };
+            } else {
+                // Handle non-201 responses (like 400 for validation errors)
+                console.log("Backend returned error:", response.data);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to create song"
+                };
             }
+        } catch (error) {
+            console.log("Failed to Create a New Song:", error);
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+             
         }
-        catch (error){
-            console.log("Failed to Create a New Song: ", error)
-        }
-    }
+    };
 
     // ==============
     // USER FUNCTIONS

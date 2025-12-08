@@ -10,7 +10,12 @@ export default function SongCard(props){
             id={song._id}
             key={song._id}
         >
-            <Box sx={{ flexGrow: 1}}>
+            <Box sx={{ 
+                flexGrow: 1,
+                backgroundColor: '#ebc55eff',
+                p:2,
+                borderRadius: 4
+            }}>
                 <Typography sx={{ 
                     p: 1, 
                     fontWeight: 'Bold'

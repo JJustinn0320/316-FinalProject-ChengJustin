@@ -8,6 +8,8 @@ import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
 
 const style = {
     position: 'absolute',
@@ -15,7 +17,6 @@ const style = {
     left: '50%',
     transform: 'translate(-50%, -50%)', 
     width: 600,
-    height: 450,
     bgcolor: '#30c071ff',
     border: '2px solid #000',
     boxShadow: 24,
@@ -44,25 +45,50 @@ export default function MUIEditSongModal(props) {
         year: '',
         youTubeId: ''
     });
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+
 
     const handleConfirm = async () => {
+        setError(null); // Clear previous errors
+        setLoading(true);
+
         console.log("Modal confirming with data:", formData);
+        
+        // Validate form first
+        if (!formData.title || !formData.artist || !formData.year || !formData.youTubeId) {
+            setError({
+                title: "Validation Error",
+                message: "Please fill in all fields",
+                type: "VALIDATION_ERROR"
+            });
+            return;
+        }
 
         // Call the parent's callback
         const result = await onCreateSong(formData);
         
         if (result.success) {
             console.log("Song created successfully!");
+            // Reset form and close
             setFormData({
                 title: '',
                 artist: '',
                 year: '',
                 youTubeId: ''
             });
+            setError(null); // Clear any previous errors
         } else {
-            console.error("Failed to create song:", result.error);
+            console.error("Failed to create song:", result);
             // Show error in modal
+            setError({
+                title: "Create Song Failed",
+                message: result.message || "Unknown error",
+                type: result.error || "UNKNOWN_ERROR"
+            });
         }
+
+        setLoading(false);
     };
 
     function handleCancelSong() {
@@ -97,7 +123,14 @@ export default function MUIEditSongModal(props) {
         <Modal
             open={store.currentModal === "CREATE_SONG"}
         >
-            <Box sx={style}>
+            <Box sx={{...style, height: error ? 550 : 450,}}>
+                {/* Error Display */}
+                {error && (
+                    <Alert severity="error" sx={{ mb: 0}}>
+                        <AlertTitle>{error.title}</AlertTitle>
+                        {error.message}
+                    </Alert>
+                )}
                 <Box sx={{
                     backgroundColor: '#035803ff',
                     color: 'white',
@@ -143,9 +176,9 @@ export default function MUIEditSongModal(props) {
                         display:"flex",
                         justifyContent: "space-between"
                     }}>
-                        <Button sx={buttonStyle} onClick={handleConfirm}>Confirm</Button>
+                        <Button sx={buttonStyle} disabled={loading} onClick={handleConfirm}>Confirm</Button>
                         <Button sx={buttonStyle} onClick={handleCancelSong}>Cancel</Button>
-                    </Box>      
+                    </Box> 
                 </Stack>
             </Box>
         </Modal>

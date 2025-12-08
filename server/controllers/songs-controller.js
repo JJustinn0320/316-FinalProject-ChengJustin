@@ -1,6 +1,6 @@
 const Song = require('../models/song-model')
 const User = require('../models/user-model')
-const Playlist = require('../models/playlist-model')
+//const Playlist = require('../models/playlist-model')
 const auth = require('../auth')
 
 const getSongArray = async (req, res) => {
@@ -22,13 +22,30 @@ const createSong = async (req, res) => {
     console.log(req.body)
     if( !ownerUsername || !ownerEmail || !title || !artist || year===undefined || !youTubeId || listens === undefined || playlists === undefined){
         console.log('missing fields')
-        return res.status(400).json({error: "Required fields missing"})
+        return res.status(400).json({
+            error: "VALIDATION_ERROR",
+            message: "Missing required fields",
+        })
     }
     try{
         const user = await User.findOne({email: ownerEmail})
         if (!user) {
             console.log('user' + user)
-            return res.status(400).json({ success: false, error: 'User not found' });
+            return res.status(400).json({ 
+                success: false, 
+                error: "USER_NOT_FOUND",
+                message: "User not found",
+            });
+        }
+
+        const exists = await Song.findOne( { title, artist, year, youTubeId } )
+        if(exists){
+            console.log('song already exists' + exists)
+            return res.status(400).json({ 
+                success: false, 
+                error: "DUPLICATE_SONG",
+                message: "This song already exists in the database",
+            })
         }
 
         const song = await Song.create({title, artist, year, youTubeId, listens, playlists, ownerUsername, ownerEmail})
@@ -40,9 +57,13 @@ const createSong = async (req, res) => {
             { songs: updatedSongs },
             { new: true }
         );
-        console.log('updated playlist')
+        console.log('updated songs')
 
-        res.status(200).json(song)
+        res.status(201).json({
+            success: true, 
+            song: song,
+            message: "Song created successfully"
+        })
     }
     catch (error) {
          res.status(400).json({error: error.message})

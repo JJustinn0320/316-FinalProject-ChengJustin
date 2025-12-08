@@ -77,28 +77,28 @@ export default function SongCard(props){
     };
 
     const listItems = store.playlistArray
-        ?.filter((playlist) => (playlist.ownerEmail === auth.user?.email))
-        ?.map((playlist) => (
-            <MenuItem 
-                key={playlist._id}
-                onClick={() => handleSelectPlaylist(playlist._id)}
-                disabled={playlist.songs?.includes(song._id)}
-            >
-                <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    width: '100%'
-                }}>
-                    <Typography noWrap>
-                        {playlist.name}
+    ?.filter((playlist) => (playlist.ownerEmail === auth.user?.email))
+    ?.map((playlist) => (
+        <MenuItem 
+            key={playlist._id}
+            onClick={() => handleSelectPlaylist(playlist._id)}
+            disabled={playlist.songs?.includes(song._id)}
+        >
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                width: '100%'
+            }}>
+                <Typography noWrap>
+                    {playlist.name}
+                </Typography>
+                {playlist.songs?.includes(song._id) && (
+                    <Typography variant="caption" color="text.secondary">
+                        ✓
                     </Typography>
-                    {playlist.songs?.includes(song._id) && (
-                        <Typography variant="caption" color="text.secondary">
-                            ✓
-                        </Typography>
-                    )}
-                </Box>
-            </MenuItem> ))
+                )}
+            </Box>
+        </MenuItem> ))
 
     const handleSelectPlaylist = async (PlaylistId) => {
         console.log(`adding song:${song._id} to playlist:`+ PlaylistId)

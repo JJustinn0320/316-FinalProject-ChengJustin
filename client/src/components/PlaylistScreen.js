@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 
-import { ClearableTextField, PlaylistCard } from './index'
+import { ClearableTextField, MUIEditPlaylistModal, PlaylistCard } from './index'
 import { CurrentModal, GlobalStoreContext } from '../store';
 import AuthContext from '../auth';
 
@@ -107,7 +107,7 @@ export default function PlaylistScreen() {
         })
     }
     const handleSearch = () => {
-        console.log(formData)
+        //console.log(formData)
         setFilters({
             showOnlyMine: false,
             playlistName: formData.playlistName,
@@ -118,12 +118,10 @@ export default function PlaylistScreen() {
             sortBy: 'name'
         })
     }
-
     const handleNewPlaylist = async () => {
         await store.createNewPlaylist()
         store.loadPlaylistArray();
     }
-
     const [selectedPlaylist, setSelectedPlaylist] = useState(null)
     const [error, setError] = useState(null)
     useEffect(() => {
@@ -151,7 +149,22 @@ export default function PlaylistScreen() {
             });
         }
     }
-
+    const handleCopy = async (playlist) =>  {
+        console.log('selected ' + selectedPlaylist?._id)
+        console.log('playlist ' + playlist?._id)
+        const result = await store.copyPlaylist(playlist?._id)
+        if (result.success){
+            console.log('playlist copyed successfully')
+            setError(null)
+        }
+        else{
+            setError({
+                title: "del playlist Failed",
+                message: result.message || "Unknown error",
+                type: result.error || "UNKNOWN_ERROR"
+            })
+        }
+    }
     const [filters, setFilters] = useState({
         showOnlyMine: true,
         playlistName: '',
@@ -168,7 +181,7 @@ export default function PlaylistScreen() {
             // console.log(playlist)
             if (filters.showOnlyMine && auth.user?.email) {
                 passes = passes && playlist.ownerEmail === auth.user.email;
-                console.log(passes)
+                //console.log(passes)
             } 
             if (filters.playlistName) {
                 const search = filters.playlistName.toLowerCase();
@@ -199,11 +212,25 @@ export default function PlaylistScreen() {
             <PlaylistCard
                 key={playlist._id}
                 playlist={playlist}
-                onDelete={() => {
+                onDelete={(event) => {
+                    event.stopPropagation()
+                    setSelectedPlaylist(playlist)
                     store.openModal(CurrentModal.DELETE_PLAYLIST) // open edit modal
                 }}
+                onCopy={(event) => {
+                    event.stopPropagation()
+                    setSelectedPlaylist(playlist)
+                    handleCopy(playlist)
+                }}
+                onEdit={(event) => {
+                    event.stopPropagation()
+                    setSelectedPlaylist(playlist)
+                    store.openModal(CurrentModal.EDIT_PLAYLIST)
+                }}
                 selected={selectedPlaylist?._id === playlist._id}
-                onClick={() => setSelectedPlaylist(playlist)}
+                onClick={(event) => {
+                    setSelectedPlaylist(playlist)
+                }}
             />
         )) || null;
 
@@ -367,6 +394,9 @@ export default function PlaylistScreen() {
                     </Box> 
                 </Box>
             </Modal>
+            <MUIEditPlaylistModal 
+                playlist={selectedPlaylist}
+            />
         </div>
     )
 }

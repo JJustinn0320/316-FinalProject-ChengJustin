@@ -109,7 +109,7 @@ const deletePlaylist = async (req, res) => {
             message: "playlist delet successfully"
         })
     }
-    catch{
+    catch (error) {
         console.error("Error del play:", error);
         res.status(500).json({ 
             success: false,
@@ -118,14 +118,174 @@ const deletePlaylist = async (req, res) => {
         });
     }
 }
-
-const editPlaylist = async (req, res) => {
+const copyPlaylist = async (req, res) => {
+    console.log('copy playlist')
+    let userId = auth.verifyUser(req)
     if(auth.verifyUser(req) === null){
         return res.status(400).json({
             errorMessage: 'UNAUTHORIZED'
         })
     }
+    console.log('verified')
+    try{
+        const { playlistId } = req.params
+        console.log(`playlistid:${playlistId}`)
+        // find playlist
+        const playlist = await Playlist.findById(playlistId)
+        if (!playlist) {
+            return res.status(404).json({ 
+                success: false,
+                error: "PLAYLIST_NOT_FOUND",
+                message: "Playlist not found" 
+            });
+        }
+        console.log('found playlist')
+        // find owner
+        const user = await User.findById(userId)
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+
+        // add (copy) untill no playlist with same name
+        let newName = playlist.name;
+        let exists = null
+        do{
+            exists = await Playlist.findOne({ name: newName, ownerEmail: user.email })
+            if (exists){
+                newName = newName + ' (Copy)'
+            }
+            console.log(newName)
+        }
+        while(exists)
+        
+        const copyPlaylist = await Playlist.create({
+            name: newName,
+            ownerUsername: user.username,
+            ownerEmail: user.email,
+            songs: playlist.songs,
+            listens: [],
+            guestHasListened: 0,
+        })
+
+        console.log('update user')
+        res.status(200).json({
+            success: true, 
+            playlist: copyPlaylist,
+            message: "playlist copy successfully"
+        })
+    }
+    catch (error){
+        console.error("Error copy play:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to copy play" 
+        });
+    }
 }
+const editPlaylist = async (req, res) => {
+    console.log('edit playlist');
+    
+    let userId = auth.verifyUser(req);
+    if (userId === null) {
+        return res.status(401).json({
+            success: false,
+            error: "UNAUTHORIZED",
+            message: "You must be logged in to edit a playlist"
+        });
+    }
+    
+    try {
+        const { playlistId } = req.params;
+        const { name, songs } = req.body;
+        
+        // Validate at least one field is provided
+        if (name === undefined && songs === undefined) {
+            return res.status(400).json({ 
+                success: false,
+                error: "BAD_REQUEST",
+                message: "At least one field (name or songs) must be provided" 
+            });
+        }
+
+        // Find the playlist
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.status(404).json({ 
+                success: false,
+                error: "PLAYLIST_NOT_FOUND",
+                message: "Playlist not found" 
+            });
+        }
+
+        // Find the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(400).json({ 
+                success: false, 
+                error: "USER_NOT_FOUND",
+                message: "User not found" 
+            });
+        }
+        
+        // Check ownership
+        if (playlist.ownerEmail !== user.email) {
+            return res.status(403).json({ 
+                success: false,
+                error: "FORBIDDEN",
+                message: "You don't own this playlist" 
+            });
+        }
+
+        // Build update object with only provided fields
+        const updateFields = {};
+        if (name !== undefined) updateFields.name = name;
+        if (songs !== undefined) updateFields.songs = songs;
+
+        const updatedPlaylist = await Playlist.findByIdAndUpdate(
+            playlistId,
+            updateFields,
+            { new: true, runValidators: true }
+        ).populate('songs');
+
+        console.log(`Playlist ${playlistId} edited by user ${user.email}`);
+
+        return res.status(200).json({
+            success: true,
+            message: "Playlist updated successfully",
+            playlist: updatedPlaylist
+        });
+
+    } catch (error) {
+        console.error("Error editing playlist:", error);
+        
+        // Handle specific errors
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                success: false,
+                error: "VALIDATION_ERROR",
+                message: "Validation failed",
+                details: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        
+        if (error.name === 'CastError') {
+            return res.status(400).json({ 
+                success: false,
+                error: "INVALID_ID",
+                message: "Invalid playlist ID format" 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to edit playlist",
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
 
 const getPlaylists = async (req, res) => {
 
@@ -280,6 +440,7 @@ const removeSongFromPlaylist = async (req, res) => {
 
 module.exports = {
     createPlaylist,
+    copyPlaylist,
     deletePlaylist,
     editPlaylist,
     getPlaylists,

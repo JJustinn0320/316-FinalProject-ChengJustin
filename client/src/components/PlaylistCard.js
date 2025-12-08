@@ -1,3 +1,6 @@
+import { useContext} from 'react'
+
+import { GlobalStoreContext } from '../store';
 
 import ListItem from "@mui/material/ListItem"
 import ListItemButton from "@mui/material/ListItemButton";
@@ -7,7 +10,8 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccordionDetails from "@mui/material/AccordionDetails";
-import List from "@mui/material/List";
+import List from '@mui/material/List';
+//import List from "@mui/material/List";
 
 const buttonStyle = {
     color: "white", 
@@ -22,19 +26,22 @@ const buttonStyle = {
 
 export default function PlaylistCard(props){
 
-    const { playlist, onDelete, onClick, selected } = props;
+    const { playlist, onDelete, onEdit, onCopy, onClick, selected } = props;
 
-    const openEditModal = () => {
-        console.log('open edit modal')
-    }
-    const handleCopy = () => {
-        console.log('handle copy')
-    }
     const openPlayModal = () => {
-        console.log('open play modal')
+        console.log('temp open play modal')
     }
 
-    let songList = [1,2,3,4,5,6]
+    const {store} = useContext(GlobalStoreContext)
+
+    const songList = playlist.songs
+        ?.map((song, index) => (
+            <ListItem key={`${song._id}-${index}`}>
+                <Typography>
+                    {index + 1}. {song.title} by {song.artist} ({song.year})
+                </Typography>
+            </ListItem>
+        )) || null
     return (
         <ListItem
             id={playlist._id}
@@ -88,11 +95,11 @@ export default function PlaylistCard(props){
                             >Delete</ListItemButton>
                         <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#3421d8ff'  }}
-                            onClick={openEditModal}
+                            onClick={onEdit}
                             >Edit</ListItemButton>
                         <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#0b854eff'  }}
-                            onClick={handleCopy}
+                            onClick={onCopy}
                             >Copy</ListItemButton>
                         <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#a82df0ff'  }}
@@ -101,7 +108,9 @@ export default function PlaylistCard(props){
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                    {songList}
+                    <List>
+                        {songList}
+                    </List>
                 </AccordionDetails>
             </Accordion>
                 

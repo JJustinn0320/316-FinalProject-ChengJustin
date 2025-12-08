@@ -46,13 +46,25 @@ export const removeSongFromPlaylist = (playlistId, songId) => {
     return api.delete(`/${playlistId}/songs/${songId}`);
 };
 export const deletePlaylist = (playlistId) => api.delete(`/playlist/${playlistId}`)
+export const copyPlaylist = (playlistId) => api.post(`/playlist/${playlistId}`)
+export const editPlaylist = (playlistId, newName, updatedSongs) => {
+  const songs = Array.isArray(updatedSongs) ? updatedSongs : [];
+  return api.patch(`/playlist/${playlistId}`, {
+    name: newName,
+    songs: songs.map(song => song._id || song) 
+  })
+}
+
+
 const apis = {
     getPlaylistArray,
     createPlaylist,
     getPlaylistById,
     addSongToPlaylist,
     removeSongFromPlaylist,
-    deletePlaylist
+    deletePlaylist,
+    copyPlaylist,
+    editPlaylist
 }
 
 export default apis

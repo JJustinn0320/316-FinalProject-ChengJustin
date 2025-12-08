@@ -11,6 +11,8 @@ export const GlobalStoreActionType = {
     LOAD_PLAYLISTS: 'LOAD_PLAYLISTS',
     LOAD_SONGS: 'LOAD_SONGS',
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
+    COPY_PLAYLIST: 'COPY_PLAYLIST',
+    EDIT_PLAYLIST: 'EDIT_PLAYLIST',
     DELETE_PLAYLIST: 'DELETE_PLAYLIST',
     CREATE_NEW_SONG: 'CREATE_NEW_SONG',
     EDIT_SONG: 'EDIT_SONG',
@@ -23,6 +25,7 @@ export const GlobalStoreActionType = {
 export const CurrentModal = {
     NONE: "NONE",
     DELETE_PLAYLIST: "DELETE_PLAYLIST",
+    EDIT_PLAYLIST: "EDIT_PLAYLIST",
     CREATE_SONG: "CREATE_SONG",
     EDIT_SONG: "EDITING_SONG",
     DELETE_SONG: "DELETE_SONG",
@@ -47,14 +50,14 @@ function GlobalStoreContextProvider(props) {
                     return {
                         ...prevStore,
                         playlistArray: payload,
-                        currentModal: CurrentModal.NONE,
+                        // currentModal: CurrentModal.NONE,
                     }
                 }
                 case GlobalStoreActionType.LOAD_SONGS: {
                     return {
                         ...prevStore,
                         songArray: payload,
-                        currentModal: CurrentModal.NONE,
+                        // currentModal: CurrentModal.NONE,
                     }
                 }
                 case GlobalStoreActionType.CREATE_NEW_LIST: {
@@ -64,6 +67,24 @@ function GlobalStoreContextProvider(props) {
                         ...prevStore,
                         playlistArray: newPlaylistArray,
                         newListCounter: prevStore.newListCounter + 1,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.COPY_PLAYLIST: {
+                    const newPlaylistArray = [...prevStore.playlistArray, payload];
+                    return {
+                        ...prevStore,
+                        playlistArray: newPlaylistArray,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.EDIT_PLAYLIST: {
+                    const newPlaylistArray = prevStore.playlistArray.map(playlist => 
+                        playlist._id === payload._id ? payload : playlist
+                    );
+                    return {
+                        ...prevStore,
+                        playlistArray: newPlaylistArray,
                         currentModal: CurrentModal.NONE
                     }
                 }
@@ -187,7 +208,6 @@ function GlobalStoreContextProvider(props) {
         }
     }
     store.deletePlaylist = async function(id) {
-        console.log("del Playlist")
 
         try{
             const response = await PlaylistRequestSender.deletePlaylist(id);
@@ -221,6 +241,69 @@ function GlobalStoreContextProvider(props) {
                 success: false, 
                 message: error.response.data.message || error.message
             }
+        }
+    }
+    store.copyPlaylist = async function(id){
+        console.log('store.copyPlay')
+        try{
+            const response = await PlaylistRequestSender.copyPlaylist(id);
+            if(response.status === 200){
+                const copyPlaylist = response.data.playlist;
+                storeReducer({
+                    type: GlobalStoreActionType.COPY_PLAYLIST,
+                    payload: copyPlaylist
+                })
+                return {
+                    success: true,
+                    playlist: copyPlaylist
+                }
+            }
+        }
+        catch (error){
+            console.log("Failed to Copy Playlist:", error);
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+        }
+    }
+    store.editPlaylist = async function(id, newName, songs){
+       console.log('store.editPlaylist');
+        try{
+            // Ensure songs is always an array
+            const songArray = Array.isArray(songs) ? songs : [];
+            // Extract song IDs
+            const songIds = songArray.map(song => song._id || song);
+            
+            const response = await PlaylistRequestSender.editPlaylist(
+                id, 
+                newName, 
+                songIds // Always send array, even if empty
+            );
+
+            if(response.data.success) {
+                const updatedPlaylist = response.data.playlist;
+                storeReducer({
+                    type: GlobalStoreActionType.EDIT_PLAYLIST,
+                    payload: updatedPlaylist
+                });
+                return {
+                    success: true,
+                    playlist: updatedPlaylist
+                };
+            } else {
+                return { 
+                    success: false, 
+                    message: response.data.message 
+                };
+            }
+        }
+        catch (error) {
+            console.error("Failed to edit Playlist:", error);
+            return { 
+                success: false, 
+                message: error.response?.data?.message || error.message
+            };
         }
     }
 
@@ -336,10 +419,10 @@ function GlobalStoreContextProvider(props) {
                 };
             } else {
                 // Handle non-201 responses (like 400 for validation errors)
-                console.log("Backend returned error:", response.data);
+                console.log("Backend returned error:", response);
                 return { 
                     success: false, 
-                    message: response.data.message || "Failed to delete song"
+                    message: response.data.message || "Failed to edit song"
                 };
             }
         }
@@ -351,6 +434,39 @@ function GlobalStoreContextProvider(props) {
             }
         }
     }
+    store.copySong = async function (songId){
+        try{
+            const response = await SongRequestSender.copySong(songId)
+            if (response.status === 201){
+                let copiedSong = response.data.song
+
+                storeReducer({
+                    type: GlobalStoreActionType.COPY_SONG,
+                    payload: copiedSong
+                })
+                return {
+                    success: true,
+                    song: copiedSong
+                }
+            }
+            else {
+                // Handle non-201 responses (like 400 for validation errors)
+                console.log("Backend returned error:", response.status);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to copy song"
+                };
+            }
+        }
+        catch (error){
+            console.log("failed to copy song")
+            return { 
+                success: false, 
+                message: error || error.message
+            }
+        }
+    }
+
     // =======================
     // SONG-PLAYLIST FUNCTIONS
     // =======================
@@ -423,6 +539,10 @@ function GlobalStoreContextProvider(props) {
             payload: {}
         });    
     }
+
+    /////////////////
+    // TRANSATIONS //
+    /////////////////
 
     return (
         <GlobalStoreContext.Provider value={{

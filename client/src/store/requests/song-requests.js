@@ -35,12 +35,16 @@ export const editSong = (songId, newTitle, newArtist, newYear, newYouTubeId) => 
         youTubeId: newYouTubeId,
     })
 }
+export const copySong = (songId) => {
+    return api.post(`/song/${songId}`)
+}
 export const deleteSong = (songId) => api.delete(`/song/${songId}`)
 const apis = {
     getSongArray,
     createSong,
     editSong,
-    deleteSong
+    deleteSong,
+    copySong
 }
 
 export default apis

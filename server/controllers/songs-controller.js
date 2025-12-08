@@ -223,9 +223,94 @@ const deleteSong = async (req, res) => {
         });
     }
 }
+
+const getSongById = async (req, res) => {
+    const {songId} = req.params
+    try{
+        const song = await Song.findById(songId)
+        res.status(200).json({
+            success: true, 
+            song: song,
+            message: "get song"
+        })
+    }
+    catch(error) {
+        console.error("Error del Song:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to del Song" 
+        });
+    } 
+}
+
+const copySong = async (req, res) => {
+    console.log('controller copy song')
+    let userId = auth.verifyUser(req)
+    console.log(userId)
+    if(auth.verifyUser(req) === null){
+        return res.status(400).json({
+            errorMessage: 'UNAUTHORIZED'
+        })
+    }
+    console.log('verified')
+
+    try{
+        const {songId} = req.params
+
+        const user = await User.findById(userId)
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+
+        const origSong = await Song.findById(songId)
+        const { artist, year, youTubeId } = origSong
+
+        let newTitle = origSong.title + " (Copy)";
+        let exists = null
+        do{
+            exists = await Song.findOne({ title: newTitle, artist, year, youTubeId })
+            if (exists){
+                newTitle = newTitle + ' (Copy)'
+            }
+            console.log(newTitle)
+        }
+        while(exists)
+        console.log("new song title " + newTitle)
+
+        const copiedSong = await Song.create({title: newTitle, artist, year, youTubeId, listens: 0, playlists: 0, ownerUsername: user.username, ownerEmail: user.email})
+        console.log('created song')
+
+        const updatedSongs = [...user.songs, copiedSong._id];
+        await User.findOneAndUpdate( 
+            { _id: userId },
+            { songs: updatedSongs },
+            { new: true }
+        );
+        console.log('updated songs')
+
+        res.status(201).json({
+            success: true, 
+            song: copiedSong,
+            message: "Copy Song created successfully"
+        })
+
+    }
+    catch (error) {
+        console.error("Error copy Song:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to copy Song" 
+        });
+    }
+}
 module.exports = {
     getSongArray,
     createSong,
     editSong,
     deleteSong,
+    getSongById,
+    copySong
 }

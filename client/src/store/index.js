@@ -13,6 +13,7 @@ export const GlobalStoreActionType = {
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
     CREATE_NEW_SONG: 'CREATE_NEW_SONG',
     EDIT_SONG: 'EDIT_SONG',
+    DELETE_SONG: 'DELETE_SONG',
     ADD_SONG_TO_PLAYLIST: 'ADD_SONG_TO_PLAYLIST',
     OPEN_MODAL: 'OPEN_MODAL',
     HIDE_MODALS: "HIDE_MODALS"
@@ -22,6 +23,7 @@ export const CurrentModal = {
     NONE: "NONE",
     CREATE_SONG: "CREATE_SONG",
     EDIT_SONG: "EDITING_SONG",
+    DELETE_SONG: "DELETE_SONG",
     ERROR: "ERROR"
 }
 
@@ -83,6 +85,15 @@ function GlobalStoreContextProvider(props) {
                 }
                 case GlobalStoreActionType.EDIT_SONG: {
                     const newSongArray = [...prevStore.songArray, payload];
+                    return {
+                        ...prevStore,
+                        songArray: newSongArray,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.DELETE_SONG: {
+                    const newSongArray = prevStore.songArray.filter(song => song._id.toString() !== payload._id.toString());
+
                     return {
                         ...prevStore,
                         songArray: newSongArray,
@@ -249,13 +260,48 @@ function GlobalStoreContextProvider(props) {
         
         }
         catch (error){
-            console.log("Failed to edit a New Song:", error);
+            console.log("Failed to edit a Song:", error);
             return { 
                 success: false, 
                 message: error.response.data.message || error.message
             }
         }
 
+    }
+    store.deleteSong = async function(songId){
+        try{
+            const response = await SongRequestSender.deleteSong(songId)
+
+            if (response.status === 200) {
+
+                let oldSong = response.data.song;
+                
+                // Update store 
+                storeReducer({
+                    type: GlobalStoreActionType.DELETE_SONG,
+                    payload: oldSong
+                });
+                this.loadSongArray()
+                return { 
+                    success: true, 
+                    song: oldSong
+                };
+            } else {
+                // Handle non-201 responses (like 400 for validation errors)
+                console.log("Backend returned error:", response.data);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to delete song"
+                };
+            }
+        }
+        catch (error){
+            console.log("failed to delete song")
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+        }
     }
     // =======================
     // SONG-PLAYLIST FUNCTIONS

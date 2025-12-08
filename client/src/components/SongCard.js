@@ -16,7 +16,7 @@ import Alert from '@mui/material/Alert';
 
 
 export default function SongCard(props){
-    const { song, onEdit, onClick, selected } = props;
+    const { song, onEdit, onClick, selected, onDelete } = props;
     
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -39,9 +39,9 @@ export default function SongCard(props){
     //     handleEditSong()
     // }
 
-    const handleRemoveFromCatalog = () => {
-        console.log('delete')
-    }
+    // const handleRemoveFromCatalog = () => {
+    //     console.log('delete')
+    // }
 
     const { store } = useContext(GlobalStoreContext);
     const { auth } = useContext(AuthContext)
@@ -77,7 +77,7 @@ export default function SongCard(props){
     };
 
     const listItems = store.playlistArray
-        ?.filter((playlist) => (playlist.ownerEmail === auth.user.email))
+        ?.filter((playlist) => (playlist.ownerEmail === auth.user?.email))
         ?.map((playlist) => (
             <MenuItem 
                 key={playlist._id}
@@ -195,7 +195,7 @@ export default function SongCard(props){
                                 Add to Playlist
                             </MenuItem>
                             <MenuItem onClick={onEdit}>Edit Song</MenuItem>
-                            <MenuItem onClick={handleRemoveFromCatalog}>Remove from Catalog</MenuItem>
+                            <MenuItem onClick={onDelete}>Remove from Catalog</MenuItem>
                         </Menu>
                         <Menu
                             id="playlist-submenu"

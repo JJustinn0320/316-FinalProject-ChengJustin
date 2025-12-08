@@ -81,7 +81,6 @@ export default function AppBanner(){
                 <MenuItem onClick={handleLogin}>Login</MenuItem>
             </div>
     }
-
     return (
         <AppBar position='static' sx={{ backgroundColor: '#f26fcf' }}>
             <Toolbar variant='dense' sx={{ justifyContent: 'space-between' }}>

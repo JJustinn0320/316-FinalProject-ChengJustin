@@ -31,6 +31,10 @@ const buttonStyle2 = {
     fontSize: 15,  
     minWidth: 100,
     maxHeight: 45,
+    '&.Mui-disabled': {           
+        color: '#888888',           // text color
+        backgroundColor: '#cccccc', // grey background
+    }
 }
 
 const style = {
@@ -57,10 +61,10 @@ export default function SongCatalogScreen() {
     const { store } = useContext(GlobalStoreContext);
     const { auth } = useContext(AuthContext)
 
-    useEffect(() => {
-        console.log("Store updated - songArray:", store.songArray);
-        console.log("Number of songs:", store.songArray.length);
-    }, [store.songArray]);
+    // useEffect(() => {
+    //     console.log("Store updated - songArray:", store.songArray);
+    //     console.log("Number of songs:", store.songArray.length);
+    // }, [store.songArray]);
 
     const hasLoaded = useRef(false); // Track if we've already loaded
     useEffect(() => {
@@ -159,7 +163,6 @@ export default function SongCatalogScreen() {
     };
 
     
-
     const [selectedSong, setSelectedSong] = useState(null);
     const [editFormData, setEditFormData] = useState({
         title: '',
@@ -213,15 +216,16 @@ export default function SongCatalogScreen() {
 
     function handleCancelSong() {
         setEditFormData({
-            title: selectedSong.title,
-            artist: selectedSong.artist,
-            year: selectedSong.year,
-            youTubeId: selectedSong.youTubeId
+            title: '',
+            artist: '',
+            year: '',
+            youTubeId: ''
         })
         store.hideModals();
+        setError(null); // Clear any previous errors
     }
 
-     const handleEditChange = (field) => (event) => {
+    const handleEditChange = (field) => (event) => {
         const value = event.target.value;
         
         if (field === 'year') {
@@ -238,6 +242,30 @@ export default function SongCatalogScreen() {
             }));
         }
     };
+
+    const handleDeleteConfirm = async () => {
+        console.log("handleDeleteConfirm");
+
+        const result = await store.deleteSong(selectedSong._id)
+        if (result.success) {
+            console.log("Song del successfully!");
+           
+            setError(null); // Clear any previous errors
+        } else {
+            console.error("Failed to del song:", result);
+            // Show error in modal
+            setError({
+                title: "del Song Failed",
+                message: result.message || "Unknown error",
+                type: result.error || "UNKNOWN_ERROR"
+            });
+        }
+    }
+
+    const handleDeleteCancel = async () => {
+        store.hideModals();
+        setError(null); // Clear any previous errors
+    }
 
     const listItems = store.songArray
         ?.filter((song) => {
@@ -272,6 +300,9 @@ export default function SongCatalogScreen() {
                 onClick={() => setSelectedSong(song)}
                 onEdit={() => {
                     store.openModal(CurrentModal.EDIT_SONG) // open edit modal
+                }}
+                onDelete={() => {
+                    store.openModal(CurrentModal.DELETE_SONG) // open edit modal
                 }}
                 selected={selectedSong?._id === song._id}
             />
@@ -323,7 +354,7 @@ export default function SongCatalogScreen() {
                         <ClearableTextField 
                             name="SongYear"
                             label="by Year"
-                            value={formData.SongYear}
+                            value={formData.songYear}
                             onChange={handleChange('songYear')}
                         />
                     </Stack>
@@ -445,12 +476,52 @@ export default function SongCatalogScreen() {
                             display:"flex",
                             justifyContent: "space-between"
                         }}>
-                            <Button sx={buttonStyle2} onClick={handleConfirm}>Confirm</Button>
+                            <Button sx={buttonStyle2} 
+                                disabled={!editFormData.title || !editFormData.artist || !editFormData.year || !editFormData.youTubeId } 
+                                onClick={handleConfirm}>Confirm</Button>
                             <Button sx={buttonStyle2} onClick={handleCancelSong}>Cancel</Button>
                         </Box> 
                     </Stack>
                 </Box>
             </Modal> 
+            <Modal open={store.currentModal === CurrentModal.DELETE_SONG}>
+                <Box sx={{...style, height: error ? 550 : 450, display:"flex", flexDirection: 'column'}}>
+                    {/* Error Display */}
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 0}}>
+                            <AlertTitle>{error.title}</AlertTitle>
+                            {error.message}
+                        </Alert>
+                    )}
+                    <Box sx={{
+                        backgroundColor: '#035803ff',
+                        color: 'white',
+                        p: 2,
+                        mb:1,
+                    }}>
+                        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                            Delete Song
+                        </Typography>
+                        
+                    </Box>
+                    <Box sx={{flexGrow:1}}>
+                        <Typography variant="h5" component="h2" sx={{ p:2, fontWeight: 'bold' }}>
+                            Are you sure you want to remove the song {selectedSong?.title} from the catalog 
+                        </Typography>
+                        <Typography sx={{p:2}}>
+                            Doing so will remove it from all of you playlists
+                        </Typography>
+                    </Box>
+                    <Box sx={{
+                        display:"flex",
+                        justifyContent: "space-between"
+                    }}>
+                        
+                        <Button sx={{...buttonStyle2, p:2, ml:2, mb:2,}} onClick={handleDeleteConfirm}>Confirm</Button>
+                        <Button sx={{...buttonStyle2, p:2, mr:2, mb:2,}} onClick={handleDeleteCancel}>Cancel</Button>
+                    </Box> 
+                </Box>
+            </Modal>
         </div>
     )
 }

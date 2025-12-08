@@ -35,10 +35,12 @@ export const editSong = (songId, newTitle, newArtist, newYear, newYouTubeId) => 
         youTubeId: newYouTubeId,
     })
 }
+export const deleteSong = (songId) => api.delete(`/song/${songId}`)
 const apis = {
     getSongArray,
     createSong,
     editSong,
+    deleteSong
 }
 
 export default apis

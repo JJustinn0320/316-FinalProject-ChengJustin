@@ -26,14 +26,18 @@ const style = {
 }
 
 const buttonStyle = {
-        mr: 2, 
-        color: "white", 
-        backgroundColor: "#1c1c1dff", 
-        borderRadius: '16px',
-        fontSize: 15,  
-        minWidth: 100,
-        maxHeight: 45,
+    mr: 2, 
+    color: "white", 
+    backgroundColor: "#1c1c1dff", 
+    borderRadius: '16px',
+    fontSize: 15,  
+    minWidth: 100,
+    maxHeight: 45,
+    '&.Mui-disabled': {           
+    color: '#888888',           // text color
+    backgroundColor: '#cccccc', // grey background
     }
+}
 
 export default function MUICreateSongModal(props) {
     const { onCreateSong } = props
@@ -96,12 +100,13 @@ export default function MUICreateSongModal(props) {
             youTubeId: ''
         })
         store.hideModals();
+        setError(null)
     }
 
     const handleChange = (field) => (event) => {
         const value = event.target.value;
         
-        if (field === 'songYear') {
+        if (field === 'year') {
             // Remove any non-digit characters
             const numericValue = value.replace(/\D/g, '');
             setFormData(prev => ({
@@ -173,7 +178,10 @@ export default function MUICreateSongModal(props) {
                         display:"flex",
                         justifyContent: "space-between"
                     }}>
-                        <Button sx={buttonStyle} onClick={handleConfirm}>Confirm</Button>
+                        <Button 
+                            sx={buttonStyle} 
+                            disabled={!formData.title || !formData.artist || !formData.year || !formData.youTubeId } 
+                            onClick={handleConfirm}>Confirm</Button>
                         <Button sx={buttonStyle} onClick={handleCancelSong}>Cancel</Button>
                     </Box> 
                 </Stack>

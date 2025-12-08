@@ -206,7 +206,7 @@ export default function PlaylistScreen() {
                         <ClearableTextField 
                             name="SongYear"
                             label="by Song Year"
-                            value={formData.SongYear}
+                            value={formData.songYear}
                             onChange={handleChange('songYear')}
                         />
                     </Stack>

@@ -1,6 +1,6 @@
 const Song = require('../models/song-model')
 const User = require('../models/user-model')
-//const Playlist = require('../models/playlist-model')
+const Playlist = require('../models/playlist-model')
 const auth = require('../auth')
 
 const getSongArray = async (req, res) => {
@@ -72,13 +72,13 @@ const createSong = async (req, res) => {
 const editSong = async (req, res) => {
     console.log('controller edit song')
     let userId = auth.verifyUser(req)
-    // console.log(id)
-    // if(auth.verifyUser(req) === null){
-    //     return res.status(400).json({
-    //         errorMessage: 'UNAUTHORIZED'
-    //     })
-    // }
-    // console.log('verified')
+    console.log(userId)
+    if(auth.verifyUser(req) === null){
+        return res.status(400).json({
+            errorMessage: 'UNAUTHORIZED'
+        })
+    }
+    console.log('verified')
     console.log(req.body)
     try{
         const { songId }= req.params
@@ -154,14 +154,74 @@ const editSong = async (req, res) => {
 }
 const deleteSong = async (req, res) => {
     console.log('controller delete song')
-    let id = auth.verifyUser(req)
-    console.log(id)
+    let userId = auth.verifyUser(req)
+    console.log(userId)
     if(auth.verifyUser(req) === null){
         return res.status(400).json({
             errorMessage: 'UNAUTHORIZED'
         })
     }
     console.log('verified')
+
+    try{
+        const { songId } = req.params
+        console.log(songId)
+
+
+        // find song
+        const song = await Song.findById(songId)
+        if (!song) {
+            return res.status(404).json({ 
+                success: false,
+                error: "SONG_NOT_FOUND",
+                message: "Song not found" 
+            });
+        }
+
+        // check owner
+        const user = await User.findById(userId)
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+        if (song.ownerEmail !== user.email) {
+            return res.status(403).json({ 
+                success: false,
+                error: "UNAUTHORIZED",
+                message: "You don't own this song" 
+            });
+        }
+
+        // remove song from user and playlist
+        // 1. Delete the song itself
+        const oldSong = await Song.findByIdAndDelete(songId);
+
+        // 2. Remove song from all users
+        await User.updateMany(
+            { songs: songId },
+            { $pull: { songs: songId } }
+        );
+
+        // 3. Remove song from all playlists
+        await Playlist.updateMany(
+            { songs: songId },
+            { $pull: { songs: songId } }
+        );
+
+        res.status(200).json({
+            success: true, 
+            song: oldSong,
+            message: "Song delet successfully"
+        })
+    }
+    catch (error) {
+        console.error("Error del Song:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to del Song" 
+        });
+    }
 }
 module.exports = {
     getSongArray,

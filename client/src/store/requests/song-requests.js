@@ -13,8 +13,8 @@ const api = axios.create({
     listens: {type: Number, required: true} */
 
 export const getSongArray = () => api.get(`/songArray/`)
-export const createSong = (username, userEmail, newTitle, newArtist, newYear, newYouTubeId, newListens) => {
-    return api.post(`/playlist/`, {
+export const createSong = (newTitle, newArtist, newYear, newYouTubeId, newListens, newPlaylist, username, userEmail) => {
+    return api.post(`/song/`, {
         // SPECIFY THE PAYLOAD
         ownerUsername: username,
         ownerEmail: userEmail,
@@ -23,8 +23,10 @@ export const createSong = (username, userEmail, newTitle, newArtist, newYear, ne
         year: newYear,
         youTubeId: newYouTubeId,
         listens: newListens,
+        playlists: newPlaylist
     })
 }
+
 const apis = {
     getSongArray,
     createSong,

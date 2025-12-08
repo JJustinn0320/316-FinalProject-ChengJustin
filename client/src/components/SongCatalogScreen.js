@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 
-import { ClearableTextField, SongCard } from './index'
+import { ClearableTextField, SongCard, MUICreateSongModal } from './index'
 import { GlobalStoreContext } from '../store';
 import AuthContext from '../auth';
 
@@ -10,10 +10,18 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List';
 
+const buttonStyle = {
+    mr: 2, 
+    color: "white", 
+    backgroundColor: "#bd27bdff", 
+    borderRadius: '16px',
+    fontSize: 15,  
+    minWidth: 100,
+    maxHeight: 45,
+}
+
 export default function SongCatalogScreen() {
     const [formData, setFormData] = useState({
-        playlistName: '',
-        username: '',
         songTitle: '',
         songArtist: '',
         songYear: ''
@@ -22,8 +30,12 @@ export default function SongCatalogScreen() {
     const { store } = useContext(GlobalStoreContext);
     const { auth } = useContext(AuthContext)
 
+    useEffect(() => {
+        console.log("Store updated - songArray:", store.songArray);
+        console.log("Number of songs:", store.songArray.length);
+    }, [store.songArray]);
+
     const hasLoaded = useRef(false); // Track if we've already loaded
-    
     useEffect(() => {
         // Only load once
         if (store && !hasLoaded.current) {
@@ -34,11 +46,10 @@ export default function SongCatalogScreen() {
     }, [store]); // store in deps, but ref prevents re-fetching
 
     // Add new Song
-    const handleNewSong = async () => {
-        await store.createNewSong()
-        store.loadSongArray();
+    const openCreateSongModal = () => {
+        console.log('open create song modal')
+        store.openCreateSongModal();
     }
-
 
     // SEARCH FILTERING
     const handleChange = (field) => (event) => {
@@ -60,16 +71,12 @@ export default function SongCatalogScreen() {
     };
     const handleClear = () => {
         setFormData({
-            playlistName: '',
-            username: '',
             songTitle: '',
             songArtist: '',
             songYear: ''
         })
         setFilters({
             showOnlyMine: true,
-            playlistName: '',
-            userName: '',
             songTitle: '',
             songArtist: '',
             songYear: '',
@@ -80,8 +87,6 @@ export default function SongCatalogScreen() {
         console.log(formData)
         setFilters({
             showOnlyMine: false,
-            playlistName: formData.playlistName,
-            username: formData.username,
             songTitle: formData.songTitle,
             songArtist: formData.songArtist,
             songYear: formData.songYear,
@@ -90,8 +95,6 @@ export default function SongCatalogScreen() {
     }
     const [filters, setFilters] = useState({
         showOnlyMine: true,
-        playlistName: '',
-        username: '',
         songTitle: '',
         songArtist: '',
         songYear: '',
@@ -101,21 +104,21 @@ export default function SongCatalogScreen() {
         ?.filter((song) => {
             // Apply multiple filters
             let passes = true;
-            // console.log(playlist)
+            // console.log(song)
             if (filters.showOnlyMine && auth.user?.email) {
                 passes = passes && song.ownerEmail === auth.user.email;
             } 
             if (filters.songTitle) {
                 const search = filters.songTitle.toLowerCase();
-                passes = passes && song.name.toLowerCase().includes(search)
+                passes = passes && song.title.toLowerCase().includes(search)
             }
             if (filters.songArtist) {
                 const search = filters.songArtist.toLowerCase();
-                passes = passes && song.name.toLowerCase().includes(search)
+                passes = passes && song.artist.toLowerCase().includes(search)
             }
             if (filters.songYear) {
                 const search = filters.songYear.toLowerCase();
-                passes = passes && song.name.toLowerCase().includes(search)
+                passes = passes && (''+song.year).includes(search)
             }
             
             return passes;
@@ -130,14 +133,24 @@ export default function SongCatalogScreen() {
             />
         )) || null;
 
-    const buttonStyle = {
-        mr: 2, 
-        color: "white", 
-        backgroundColor: "#bd27bdff", 
-        borderRadius: '16px',
-        fontSize: 15,  
-        minWidth: 100,
-        maxHeight: 45,
+    const handleCreateSong = async (songData) => {
+        try{
+            const newSong = await store.createSong(
+                songData.title,
+                songData.artist,
+                songData.year,
+                songData.youTubeId
+            )
+
+            await store.loadSongArray(); 
+            
+            store.hideModals();
+            return { success: true, song: newSong };
+        }
+        catch (error) {
+            console.error("Failed to create song:", error);
+            return { success: false, error: error.message };
+        }
     }
 
     return (
@@ -247,10 +260,13 @@ export default function SongCatalogScreen() {
                 }}>
                     <Button 
                         sx={buttonStyle}
-                        onClick={handleNewSong}
-                    >⊕ New Playlist</Button>
+                        onClick={openCreateSongModal}
+                    >⊕ New Song</Button>
                 </Box>
+                
             </Box>
+            <MUICreateSongModal
+                onCreateSong={handleCreateSong}/>
         </div>
     )
 }

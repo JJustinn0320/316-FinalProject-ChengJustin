@@ -5,6 +5,7 @@ import EditAccountScreen from "./EditAccountScreen";
 import HomeWrapper from "./HomeWrapper";
 import PlaylistCard from "./PlaylistCard";
 import LoginScreen from "./LoginScreen";
+import MUICreateSongModal from './MUICreateSongModel'
 import MUIErrorModal from "./MUIErrorModal";
 import PlaylistScreen from "./PlaylistScreen";
 import RegisterScreen from "./RegisterScreen";
@@ -20,6 +21,7 @@ export {
     HomeWrapper,
     PlaylistCard,
     LoginScreen,
+    MUICreateSongModal,
     MUIErrorModal,
     PlaylistScreen,
     RegisterScreen,

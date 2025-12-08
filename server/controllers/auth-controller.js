@@ -130,9 +130,9 @@ const logoutUser = async (req, res) => {
 }
 
 const getLoggedIn = async (req, res) => {
-    console.log('=== GET LOGGED IN ===');
-    console.log('Cookies received:', req.cookies);
-    console.log('Token in cookies:', req.cookies?.token?.substring(0, 30) + '...');
+    // console.log('=== GET LOGGED IN ===');
+    // console.log('Cookies received:', req.cookies);
+    // console.log('Token in cookies:', req.cookies?.token?.substring(0, 30) + '...');
     try {
         let userId = auth.verifyUser(req);
         if (!userId) {
@@ -142,9 +142,9 @@ const getLoggedIn = async (req, res) => {
                 errorMessage: "?"
             })
         }
-        console.log("find user: " + userId);
+        //console.log("find user: " + userId);
         const loggedInUser = await User.findOne({ _id: userId });
-        console.log("loggedInUser: " + loggedInUser);
+        //console.log("loggedInUser: " + loggedInUser);
 
         return res.status(200).json({
             loggedIn: true,

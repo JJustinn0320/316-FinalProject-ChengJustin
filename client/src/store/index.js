@@ -9,12 +9,15 @@ export const GlobalStoreContext = createContext({});
 
 export const GlobalStoreActionType = {
     LOAD_PLAYLISTS: 'LOAD_PLAYLISTS',
+    LOAD_SONGS: 'LOAD_SONGS',
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
+    CREATE_NEW_SONG: 'CREATE_NEW_SONG',
     HIDE_MODALS: "HIDE_MODALS"
 }
 
 const CurrentModal = {
     NONE: "NONE",
+    CREATE_SONG: "CREATE_SONG",
     ERROR: "ERROR"
 }
 
@@ -30,46 +33,59 @@ function GlobalStoreContextProvider(props) {
 
     const storeReducer = (action) => {
         const { type, payload } = action;
-        switch (type) {
-            case GlobalStoreActionType.LOAD_PLAYLISTS: {
-                return setStore({
-                    playlistArray: payload,
-                    songArray: store.songArray,
-                    newListCounter: store.newListCounter,
-                    currentModal: CurrentModal.NONE
-                })
+        setStore(prevStore => {
+            switch (type) {
+                case GlobalStoreActionType.LOAD_PLAYLISTS: {
+                    return {
+                        ...prevStore,
+                        playlistArray: payload,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.LOAD_SONGS: {
+                    return {
+                        ...prevStore,
+                        songArray: payload,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.CREATE_NEW_LIST: {
+                    // For playlist, you might want to add it to array too
+                    const newPlaylistArray = [...prevStore.playlistArray, payload.newList];
+                    return {
+                        ...prevStore,
+                        playlistArray: newPlaylistArray,
+                        newListCounter: prevStore.newListCounter + 1,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.CREATE_NEW_SONG: {
+                    const newSongArray = [...prevStore.songArray, payload];
+                    return {
+                        ...prevStore,
+                        songArray: newSongArray,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.OPEN_MODAL: {
+                    return {
+                        ...prevStore,
+                        currentModal: payload
+                    }
+                }
+                case GlobalStoreActionType.HIDE_MODALS: {
+                    return {
+                        ...prevStore,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                default:
+                    return prevStore;
             }
-            case GlobalStoreActionType.LOAD_SONGS: {
-                return setStore({
-                    playlistArray: store.playlistArray,
-                    songArray: payload,
-                    newListCounter: store.newListCounter,
-                    currentModal: CurrentModal.NONE
-                })
-            }
-            case GlobalStoreActionType.CREATE_NEW_LIST: {
-                return setStore({
-                    playlistArray: store.playlistArray,
-                    songArray: store.songArray,
-                    newListCounter: store.newListCounter + 1,
-                    currentModal: CurrentModal.NONE
-                })
-            }
-            case GlobalStoreActionType.HIDE_MODALS: {
-                return setStore({
-                    playlistArray: store.playlistArray,
-                    songArray: store.songArray,
-                    newListCounter: store.newListCounter, 
-                    currentModal: CurrentModal.NONE
-                })
-            }
-            default:
-                return store
-        }
+        });
     }
 
     store.loadPlaylistArray= async function() {
-
         const response = await PlaylistRequestSender.getPlaylistArray();
         if (response.data.success) {
             let playlistArray = response.data.playlistArray;
@@ -86,8 +102,8 @@ function GlobalStoreContextProvider(props) {
         console.log("createNewPlaylist")
         const username = auth.user.username;
         const userEmail = auth.user.email;
-        const userPlaylists = store.playlistArray.filter(pair => 
-            pair.ownerEmail === userEmail
+        const userPlaylists = store.playlistArray.filter(playlist => 
+            playlist.ownerEmail === userEmail
         );
         console.log(userPlaylists)
 
@@ -118,6 +134,7 @@ function GlobalStoreContextProvider(props) {
                     type: GlobalStoreActionType.CREATE_NEW_LIST,
                     payload: {newList, counter}
                 });
+                this.loadPlaylistArray()
             }
         }
         catch (error){
@@ -128,9 +145,37 @@ function GlobalStoreContextProvider(props) {
     // SONG FUNCTIONS
     // ==============
     store.loadSongArray = async function() {
-
+        const response = await SongRequestSender.getSongArray();
+        if (response.data.success) {
+            let songArray = response.data.songArray;
+            storeReducer({
+                type: GlobalStoreActionType.LOAD_SONGS,
+                payload: songArray
+            });
+        }
+        else {
+            console.log("FAILED TO GET THE LIST PAIRS");
+        }
     }
+    store.createSong = async function(title, artist, year, youTubeId) {
+        try{
+            const response = await SongRequestSender.createSong(title, artist, year, youTubeId, 0, 0, auth.user.username, auth.user.email);
+            if(response.status === 201){
+                let newSong = response.data.song;
+                storeReducer({
+                    type: GlobalStoreActionType.CREATE_NEW_SONG,
+                    payload: newSong
+                });
 
+                this.loadSongArray()
+                this.hideModals()
+                return newSong
+            }
+        }
+        catch (error){
+            console.log("Failed to Create a New Song: ", error)
+        }
+    }
 
     // ==============
     // USER FUNCTIONS
@@ -147,6 +192,13 @@ function GlobalStoreContextProvider(props) {
         }
     }
 
+
+    store.openCreateSongModal = function() {
+        storeReducer({
+            type: GlobalStoreActionType.OPEN_MODAL,
+            payload: CurrentModal.CREATE_SONG
+        })
+    };
     store.hideModals = () => {
         auth.errorMessage = null;
         storeReducer({

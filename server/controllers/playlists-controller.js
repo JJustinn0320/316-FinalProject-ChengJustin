@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Playlist = require('../models/playlist-model')
 const User = require('../models/user-model')
-const Song = require('../models/song-model')
+//const Song = require('../models/song-model')
 const auth = require('../auth')
 
 const createPlaylist = async (req, res) => {
@@ -42,7 +42,7 @@ const createPlaylist = async (req, res) => {
         const playlist = await Playlist.create({name, ownerUsername, ownerEmail, songs, listens, guestHasListened})
         console.log('created playlist')
 
-        const updatedPlaylists = [...user.playlists, playlist.id];
+        const updatedPlaylists = [...user.playlists, playlist._id];
         await User.findOneAndUpdate( 
             { _id: id },
             { playlists: updatedPlaylists },
@@ -114,7 +114,7 @@ const getPlaylistArray = async (req, res) => {
     //     array.push(playlist);
     // }
     
-    console.log("Final list:", playlists); // Debug the output
+    // console.log("Final list:", playlists); // Debug the output
     return res.status(200).json({ success: true, playlistArray: playlists });
 }
 

@@ -161,7 +161,6 @@ export default function SongCatalogScreen() {
     
 
     const [selectedSong, setSelectedSong] = useState(null);
-    const [currentSong, setCurrentSong] = useState(null)
     const [editFormData, setEditFormData] = useState({
         title: '',
         artist: '',
@@ -181,8 +180,35 @@ export default function SongCatalogScreen() {
         }
     }, [selectedSong]);
 
-    const handleConfirm = () => {
+    const [error, setError] = useState(null);
+
+    const handleConfirm = async () => {
+        console.log("handleConfirm (edit song)");
         console.log(editFormData)
+        // Call store method
+        const result = await store.editSong(
+            selectedSong._id,
+            editFormData.title,
+            editFormData.artist,
+            editFormData.year,
+            editFormData.youTubeId
+        );
+        
+        console.log("Store editSong result:", result);
+        
+        if (result.success) {
+            console.log("Song edit successfully!");
+           
+            setError(null); // Clear any previous errors
+        } else {
+            console.error("Failed to edit song:", result);
+            // Show error in modal
+            setError({
+                title: "Edit Song Failed",
+                message: result.message || "Unknown error",
+                type: result.error || "UNKNOWN_ERROR"
+            });
+        }
     }
 
     function handleCancelSong() {
@@ -250,8 +276,6 @@ export default function SongCatalogScreen() {
                 selected={selectedSong?._id === song._id}
             />
         )) || null;
-
-    let error={}
     return (
         <div id="songs-catalog-screen">
             <Box

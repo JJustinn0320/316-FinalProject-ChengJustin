@@ -202,7 +202,7 @@ const removeSongFromPlaylist = async (req, res) => {
         await playlist.save();
         
         
-        // 6. Return updated playlist
+        // Return updated playlist
         const updatedPlaylist = await Playlist.findById(playlistId)
             .populate('songs')
             .exec();

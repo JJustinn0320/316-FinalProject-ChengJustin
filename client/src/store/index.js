@@ -12,6 +12,7 @@ export const GlobalStoreActionType = {
     LOAD_SONGS: 'LOAD_SONGS',
     CREATE_NEW_LIST: 'CREATE_NEW_LIST',
     CREATE_NEW_SONG: 'CREATE_NEW_SONG',
+    EDIT_SONG: 'EDIT_SONG',
     ADD_SONG_TO_PLAYLIST: 'ADD_SONG_TO_PLAYLIST',
     OPEN_MODAL: 'OPEN_MODAL',
     HIDE_MODALS: "HIDE_MODALS"
@@ -73,6 +74,14 @@ function GlobalStoreContextProvider(props) {
                     }
                 }
                 case GlobalStoreActionType.CREATE_NEW_SONG: {
+                    const newSongArray = [...prevStore.songArray, payload];
+                    return {
+                        ...prevStore,
+                        songArray: newSongArray,
+                        currentModal: CurrentModal.NONE
+                    }
+                }
+                case GlobalStoreActionType.EDIT_SONG: {
                     const newSongArray = [...prevStore.songArray, payload];
                     return {
                         ...prevStore,
@@ -209,7 +218,45 @@ function GlobalStoreContextProvider(props) {
              
         }
     };
+    store.editSong = async function(songId, title, artist, year, youTubeId) {
+        try{
+            const response = await SongRequestSender.editSong(songId, title, artist, year, youTubeId)
+            
+            console.log("Edit song response:", response);
+            
+            if (response.status === 200) {
+                console.log()
+                let newSong = response.data.song;
+                
+                // Update store 
+                storeReducer({
+                    type: GlobalStoreActionType.EDIT_SONG,
+                    payload: newSong
+                });
+                this.loadSongArray()
+                return { 
+                    success: true, 
+                    song: newSong 
+                };
+            } else {
+                // Handle non-201 responses (like 400 for validation errors)
+                console.log("Backend returned error:", response.data);
+                return { 
+                    success: false, 
+                    message: response.data.message || "Failed to edit song"
+                };
+            }
+        
+        }
+        catch (error){
+            console.log("Failed to edit a New Song:", error);
+            return { 
+                success: false, 
+                message: error.response.data.message || error.message
+            }
+        }
 
+    }
     // =======================
     // SONG-PLAYLIST FUNCTIONS
     // =======================

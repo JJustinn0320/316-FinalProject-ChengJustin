@@ -69,8 +69,103 @@ const createSong = async (req, res) => {
          res.status(400).json({error: error.message})
     }
 }
+const editSong = async (req, res) => {
+    console.log('controller edit song')
+    let userId = auth.verifyUser(req)
+    // console.log(id)
+    // if(auth.verifyUser(req) === null){
+    //     return res.status(400).json({
+    //         errorMessage: 'UNAUTHORIZED'
+    //     })
+    // }
+    // console.log('verified')
+    console.log(req.body)
+    try{
+        const { songId }= req.params
+        console.log(songId)
+        const { title, artist, year, youTubeId } = req.body
+        if(!title || !artist || year===undefined || !youTubeId){
+            console.log('missing fields')
+            return res.status(400).json({
+                error: "VALIDATION_ERROR",
+                message: "Missing required fields",
+            })
+        }
 
+        // find song
+        const song = await Song.findById(songId)
+        if (!song) {
+            return res.status(404).json({ 
+                success: false,
+                error: "SONG_NOT_FOUND",
+                message: "Song not found" 
+            });
+        }
+
+        // check owner
+        const user = await User.findById(userId)
+        if (!user) {
+            console.log('user' + user)
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+        if (song.ownerEmail !== user.email) {
+            return res.status(403).json({ 
+                success: false,
+                error: "UNAUTHORIZED",
+                message: "You don't own this song" 
+            });
+        }
+
+        // check if exists
+        const exists = await Song.findOne({ 
+            title, artist, year, youTubeId,
+            _id: { $ne: songId }  // exclude current song
+        });
+        if(exists){
+            console.log('song already exists' + exists)
+            return res.status(400).json({ 
+                success: false, 
+                error: "DUPLICATE_SONG",
+                message: "This song already exists in the database",
+            })
+        }
+
+        // update
+        const newSong = await Song.findOneAndUpdate(
+            {_id: songId }, 
+            {title, artist, year, youTubeId},
+            {new: true})
+        console.log('updated song')
+
+        res.status(200).json({
+            success: true, 
+            song: newSong,
+            message: "Song edit successfully"
+        })
+    }
+    catch (error) {
+        console.error("Error edting Song:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "SERVER_ERROR",
+            message: "Failed to edit Song" 
+        });
+    }
+}
+const deleteSong = async (req, res) => {
+    console.log('controller delete song')
+    let id = auth.verifyUser(req)
+    console.log(id)
+    if(auth.verifyUser(req) === null){
+        return res.status(400).json({
+            errorMessage: 'UNAUTHORIZED'
+        })
+    }
+    console.log('verified')
+}
 module.exports = {
     getSongArray,
     createSong,
+    editSong,
+    deleteSong,
 }

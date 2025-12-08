@@ -4,7 +4,7 @@ const router = express.Router()
 
 router.get('/songArray', SongController.getSongArray)
 router.post('/song', SongController.createSong)
-// router.post('/song/:id', SongController.editSong)
-// router.post('/song/:id', SongController.deleteSong)
+router.patch('/song/:songId', SongController.editSong)
+router.delete('/song/:songId', SongController.deleteSong)
 
 module.exports = router

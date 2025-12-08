@@ -26,10 +26,19 @@ export const createSong = (newTitle, newArtist, newYear, newYouTubeId, newListen
         playlists: newPlaylist
     })
 }
-
+export const editSong = (songId, newTitle, newArtist, newYear, newYouTubeId) => {
+    console.log(`s${songId}, t${newTitle}, a${newArtist}, y${newYear}, y${newYouTubeId}`)
+    return api.patch(`/song/${songId}`, {
+        title: newTitle,
+        artist: newArtist,
+        year: newYear,
+        youTubeId: newYouTubeId,
+    })
+}
 const apis = {
     getSongArray,
     createSong,
+    editSong,
 }
 
 export default apis

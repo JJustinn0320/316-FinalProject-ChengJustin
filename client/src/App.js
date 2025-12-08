@@ -9,7 +9,10 @@ import {
     RegisterScreen,
     EditAccountScreen,
     PlaylistScreen,
-    SongCatalogScreen
+    SongCatalogScreen,
+    MUICreateSongModal,
+    MUIEditSongModal,
+    MUIErrorModal
 } from './components'
 const App = () => {  
   return (
@@ -17,6 +20,10 @@ const App = () => {
           <AuthContextProvider>
             <GlobalStoreContextProvider>
               <AppBanner />
+              <MUICreateSongModal />
+              <MUIEditSongModal />
+              <MUIErrorModal />
+
               <Routes>
                   <Route path="/" element={<HomeWrapper />} />
                   <Route path="/login/" element={<LoginScreen />} />

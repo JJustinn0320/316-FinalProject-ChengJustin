@@ -17,9 +17,10 @@ export const GlobalStoreActionType = {
     HIDE_MODALS: "HIDE_MODALS"
 }
 
-const CurrentModal = {
+export const CurrentModal = {
     NONE: "NONE",
     CREATE_SONG: "CREATE_SONG",
+    EDIT_SONG: "EDITING_SONG",
     ERROR: "ERROR"
 }
 
@@ -80,6 +81,8 @@ function GlobalStoreContextProvider(props) {
                     }
                 }
                 case GlobalStoreActionType.OPEN_MODAL: {
+                    console.log("reducer setting currentModal to " + payload)
+                    
                     return {
                         ...prevStore,
                         currentModal: payload
@@ -258,11 +261,18 @@ function GlobalStoreContextProvider(props) {
         }
     }
 
-
-    store.openCreateSongModal = function() {
+    store.openEditSongModal = () => {
+        console.log('called')
         storeReducer({
             type: GlobalStoreActionType.OPEN_MODAL,
-            payload: CurrentModal.CREATE_SONG
+            payload: CurrentModal.EDIT_SONG
+        })
+    }
+    store.openModal = (modal) => {
+        console.log(modal + " was passed to store")
+        storeReducer({
+            type: GlobalStoreActionType.OPEN_MODAL,
+            payload: modal
         })
     };
     store.hideModals = () => {

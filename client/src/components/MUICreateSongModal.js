@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import GlobalStoreContext from '../store';
+import { GlobalStoreContext } from '../store';
 
 import { ClearableTextField } from './index'
 
@@ -35,7 +35,7 @@ const buttonStyle = {
         maxHeight: 45,
     }
 
-export default function MUIEditSongModal(props) {
+export default function MUICreateSongModal(props) {
     const { onCreateSong } = props
 
     const { store } = useContext(GlobalStoreContext);
@@ -46,12 +46,10 @@ export default function MUIEditSongModal(props) {
         youTubeId: ''
     });
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-
 
     const handleConfirm = async () => {
         setError(null); // Clear previous errors
-        setLoading(true);
+
 
         console.log("Modal confirming with data:", formData);
         
@@ -88,7 +86,6 @@ export default function MUIEditSongModal(props) {
             });
         }
 
-        setLoading(false);
     };
 
     function handleCancelSong() {
@@ -138,7 +135,7 @@ export default function MUIEditSongModal(props) {
                     mb:1,
                 }}>
                     <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-                        Edit Song
+                        Create Song
                     </Typography>
                 </Box>
                 <Stack spacing={2} sx={{
@@ -176,7 +173,7 @@ export default function MUIEditSongModal(props) {
                         display:"flex",
                         justifyContent: "space-between"
                     }}>
-                        <Button sx={buttonStyle} disabled={loading} onClick={handleConfirm}>Confirm</Button>
+                        <Button sx={buttonStyle} onClick={handleConfirm}>Confirm</Button>
                         <Button sx={buttonStyle} onClick={handleCancelSong}>Cancel</Button>
                     </Box> 
                 </Stack>

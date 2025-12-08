@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 
 import { ClearableTextField, SongCard, MUICreateSongModal } from './index'
-import { GlobalStoreContext } from '../store';
+import { CurrentModal, GlobalStoreContext } from '../store';
 import AuthContext from '../auth';
 
 import Box from "@mui/material/Box"
@@ -9,6 +9,9 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List';
+import Modal from '@mui/material/Modal';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
 
 const buttonStyle = {
     mr: 2, 
@@ -18,6 +21,30 @@ const buttonStyle = {
     fontSize: 15,  
     minWidth: 100,
     maxHeight: 45,
+}
+
+const buttonStyle2 = {
+    mr: 2, 
+    color: "white", 
+    backgroundColor: "#1c1c1dff", 
+    borderRadius: '16px',
+    fontSize: 15,  
+    minWidth: 100,
+    maxHeight: 45,
+}
+
+const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)', 
+    width: 600,
+    bgcolor: '#30c071ff',
+    border: '2px solid #000',
+    boxShadow: 24,
+    borderRadius: 2,
+    maxWidth: '90vw',
+    maxHeight: '90vh', 
 }
 
 export default function SongCatalogScreen() {
@@ -47,8 +74,7 @@ export default function SongCatalogScreen() {
 
     // Add new Song
     const openCreateSongModal = () => {
-        console.log('open create song modal')
-        store.openCreateSongModal();
+        store.openModal(CurrentModal.CREATE_SONG);
     }
 
     // SEARCH FILTERING
@@ -100,39 +126,6 @@ export default function SongCatalogScreen() {
         songYear: '',
         sortBy: 'name'
     })
-    const listItems = store.songArray
-        ?.filter((song) => {
-            // Apply multiple filters
-            let passes = true;
-            // console.log(song)
-            if (filters.showOnlyMine && auth.user?.email) {
-                passes = passes && song.ownerEmail === auth.user.email;
-            } 
-            if (filters.songTitle) {
-                const search = filters.songTitle.toLowerCase();
-                passes = passes && song.title.toLowerCase().includes(search)
-            }
-            if (filters.songArtist) {
-                const search = filters.songArtist.toLowerCase();
-                passes = passes && song.artist.toLowerCase().includes(search)
-            }
-            if (filters.songYear) {
-                const search = filters.songYear.toLowerCase();
-                passes = passes && (''+song.year).includes(search)
-            }
-            
-            return passes;
-        })
-        ?.sort((a, b) => {
-            return 0
-        })
-        ?.map((song) => (
-            <SongCard
-                key={song._id}
-                song={song}
-            />
-        )) || null;
-
     const handleCreateSong = async (songData) => {
         console.log("handleCreateSong called with:", songData);
         
@@ -165,6 +158,100 @@ export default function SongCatalogScreen() {
         }
     };
 
+    
+
+    const [selectedSong, setSelectedSong] = useState(null);
+    const [currentSong, setCurrentSong] = useState(null)
+    const [editFormData, setEditFormData] = useState({
+        title: '',
+        artist: '',
+        year: '',
+        youTubeId: ''
+    });
+
+    useEffect(() => {
+        if (selectedSong) {
+            console.log(selectedSong._id)
+            setEditFormData({
+                title: selectedSong.title,
+                artist: selectedSong.artist,
+                year: selectedSong.year,
+                youTubeId: selectedSong.youTubeId
+            });
+        }
+    }, [selectedSong]);
+
+    const handleConfirm = () => {
+        console.log(editFormData)
+    }
+
+    function handleCancelSong() {
+        setEditFormData({
+            title: selectedSong.title,
+            artist: selectedSong.artist,
+            year: selectedSong.year,
+            youTubeId: selectedSong.youTubeId
+        })
+        store.hideModals();
+    }
+
+     const handleEditChange = (field) => (event) => {
+        const value = event.target.value;
+        
+        if (field === 'year') {
+            // Remove any non-digit characters
+            const numericValue = value.replace(/\D/g, '');
+            setEditFormData(prev => ({
+                ...prev,
+                [field]: numericValue
+            }));
+        } else {
+            setEditFormData(prev => ({
+                ...prev,
+                [field]: value
+            }));
+        }
+    };
+
+    const listItems = store.songArray
+        ?.filter((song) => {
+            // Apply multiple filters
+            let passes = true;
+            // console.log(song)
+            if (filters.showOnlyMine && auth.user?.email) {
+                passes = passes && song.ownerEmail === auth.user.email;
+            } 
+            if (filters.songTitle) {
+                const search = filters.songTitle.toLowerCase();
+                passes = passes && song.title.toLowerCase().includes(search)
+            }
+            if (filters.songArtist) {
+                const search = filters.songArtist.toLowerCase();
+                passes = passes && song.artist.toLowerCase().includes(search)
+            }
+            if (filters.songYear) {
+                const search = filters.songYear.toLowerCase();
+                passes = passes && (''+song.year).includes(search)
+            }
+            
+            return passes;
+        })
+        ?.sort((a, b) => {
+            return 0
+        })
+        ?.map((song) => (
+            <SongCard
+                key={song._id}
+                song={song}
+                onClick={() => setSelectedSong(song)}
+                onEdit={() => {
+                    store.openModal(CurrentModal.EDIT_SONG) // open edit modal
+                }}
+                selected={selectedSong?._id === song._id}
+            />
+        )) || null;
+
+    let error={}
     return (
         <div id="songs-catalog-screen">
             <Box
@@ -279,7 +366,67 @@ export default function SongCatalogScreen() {
             </Box>
             <MUICreateSongModal
                 onCreateSong={handleCreateSong}
-                />
+            />     
+            <Modal open={store.currentModal === CurrentModal.EDIT_SONG}>
+                <Box sx={{...style, height: error ? 550 : 450,}}>
+                    {/* Error Display */}
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 0}}>
+                            <AlertTitle>{error.title}</AlertTitle>
+                            {error.message}
+                        </Alert>
+                    )}
+                    <Box sx={{
+                        backgroundColor: '#035803ff',
+                        color: 'white',
+                        p: 2,
+                        mb:1,
+                    }}>
+                        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                            Edit Song
+                        </Typography>
+                    </Box>
+                    <Stack spacing={2} sx={{
+                        p:4
+                    }}>
+                        <ClearableTextField 
+                            name="title"
+                            label="Title"
+                            value={editFormData.title}
+                            onChange={handleEditChange('title')}
+                        />
+                    
+                        <ClearableTextField 
+                            name="artist"
+                            label="Artist"
+                            value={editFormData.artist}
+                            onChange={handleEditChange('artist')}
+                        />
+                    
+                        <ClearableTextField 
+                            name="year"
+                            label="Year"
+                            value={editFormData.year}
+                            onChange={handleEditChange('year')}
+                        />
+                    
+                        <ClearableTextField 
+                            name="youTubeId"
+                            label="YouTubeId"
+                            value={editFormData.youTubeId}
+                            onChange={handleEditChange('youTubeId')}
+                        />
+                
+                        <Box sx={{
+                            display:"flex",
+                            justifyContent: "space-between"
+                        }}>
+                            <Button sx={buttonStyle2} onClick={handleConfirm}>Confirm</Button>
+                            <Button sx={buttonStyle2} onClick={handleCancelSong}>Cancel</Button>
+                        </Box> 
+                    </Stack>
+                </Box>
+            </Modal> 
         </div>
     )
 }

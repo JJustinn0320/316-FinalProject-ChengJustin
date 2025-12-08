@@ -14,8 +14,9 @@ import Typography from "@mui/material/Typography";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
+
 export default function SongCard(props){
-    const { song } = props;
+    const { song, onEdit, onClick, selected } = props;
     
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -32,9 +33,12 @@ export default function SongCard(props){
         setPlaylistAnchorEl(null);
     };
 
-    const handleEditSong = () => {
-        console.log('edit')
-    }
+    // const openEditSongModal = () => {
+    //     console.log(song._id)
+    //     store.openModal(CurrentModal.EDIT_SONG)
+    //     handleEditSong()
+    // }
+
     const handleRemoveFromCatalog = () => {
         console.log('delete')
     }
@@ -132,18 +136,24 @@ export default function SongCard(props){
         severity: 'success' // 'success' | 'error' 
     })
 
-
-
     return (
         <ListItem
             id={song._id}
             key={song._id}
         >
-            <Box sx={{ 
-                flexGrow: 1,
-                backgroundColor: '#ebc55eff',
-                p:2,
-                borderRadius: 4
+            <Box 
+                onClick={onClick}
+                sx={{ 
+                    border: selected ? '3px solid #d38919ff' : '1px solid #ccc',
+                    flexGrow: 1,
+                    backgroundColor: '#ebc55eff',
+                    p:2,
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'border 0.8',
+                    '&:hover': {
+                        borderColor: '#d38919ff',
+                    }
             }}>
                 <Box sx={{
                     display: 'flex',
@@ -184,7 +194,7 @@ export default function SongCard(props){
                             >
                                 Add to Playlist
                             </MenuItem>
-                            <MenuItem onClick={handleEditSong}>Edit Song</MenuItem>
+                            <MenuItem onClick={onEdit}>Edit Song</MenuItem>
                             <MenuItem onClick={handleRemoveFromCatalog}>Remove from Catalog</MenuItem>
                         </Menu>
                         <Menu

@@ -61,11 +61,6 @@ export default function SongCatalogScreen() {
     const { store } = useContext(GlobalStoreContext);
     const { auth } = useContext(AuthContext)
 
-    // useEffect(() => {
-    //     console.log("Store updated - songArray:", store.songArray);
-    //     console.log("Number of songs:", store.songArray.length);
-    // }, [store.songArray]);
-
     const hasLoaded = useRef(false); // Track if we've already loaded
     useEffect(() => {
         // Only load once
@@ -99,6 +94,7 @@ export default function SongCatalogScreen() {
             }));
         }
     };
+    
     const handleClear = () => {
         setFormData({
             songTitle: '',
@@ -110,9 +106,10 @@ export default function SongCatalogScreen() {
             songTitle: '',
             songArtist: '',
             songYear: '',
-            sortBy: 'name'
+            sortBy: 'none' // Changed from 'name' to 'none'
         })
     }
+    
     const handleSearch = () => {
         console.log(formData)
         setFilters({
@@ -120,20 +117,21 @@ export default function SongCatalogScreen() {
             songTitle: formData.songTitle,
             songArtist: formData.songArtist,
             songYear: formData.songYear,
-            sortBy: 'name'
+            sortBy: filters.sortBy || 'none'
         })
     }
+    
     const [filters, setFilters] = useState({
         showOnlyMine: true,
         songTitle: '',
         songArtist: '',
         songYear: '',
-        sortBy: 'name'
+        sortBy: 'none' // Changed from 'name' to 'none'
     })
+    
     const handleCreateSong = async (songData) => {
         console.log("handleCreateSong called with:", songData);
         
-        // Call store method
         const result = await store.createSong(
             songData.title,
             songData.artist,
@@ -144,7 +142,6 @@ export default function SongCatalogScreen() {
         console.log("Store createSong result:", result);
         
         if (result.success) {
-            
             console.log("Song created successfully:", result.song);
             store.hideModals();
             return { 
@@ -152,7 +149,6 @@ export default function SongCatalogScreen() {
                 song: result.song 
             };
         } else {
-            // Error - return it to modal
             console.log("Failed to create song:", result);
             return { 
                 success: false, 
@@ -162,7 +158,6 @@ export default function SongCatalogScreen() {
         }
     };
 
-    
     const [selectedSong, setSelectedSong] = useState(null);
     const [editFormData, setEditFormData] = useState({
         title: '',
@@ -194,7 +189,6 @@ export default function SongCatalogScreen() {
     const handleConfirm = async () => {
         console.log("handleConfirm (edit song)");
         console.log(editFormData)
-        // Call store method
         const result = await store.editSong(
             selectedSong._id,
             editFormData.title,
@@ -207,11 +201,9 @@ export default function SongCatalogScreen() {
         
         if (result.success) {
             console.log("Song edit successfully!");
-           
-            setError(null); // Clear any previous errors
+            setError(null);
         } else {
             console.error("Failed to edit song:", result);
-            // Show error in modal
             setError({
                 title: "Edit Song Failed",
                 message: result.message || "Unknown error",
@@ -228,14 +220,13 @@ export default function SongCatalogScreen() {
             youTubeId: ''
         })
         store.hideModals();
-        setError(null); // Clear any previous errors
+        setError(null);
     }
 
     const handleEditChange = (field) => (event) => {
         const value = event.target.value;
         
         if (field === 'year') {
-            // Remove any non-digit characters
             const numericValue = value.replace(/\D/g, '');
             setEditFormData(prev => ({
                 ...prev,
@@ -255,11 +246,9 @@ export default function SongCatalogScreen() {
         const result = await store.deleteSong(selectedSong._id)
         if (result.success) {
             console.log("Song del successfully!");
-           
-            setError(null); // Clear any previous errors
+            setError(null);
         } else {
             console.error("Failed to del song:", result);
-            // Show error in modal
             setError({
                 title: "del Song Failed",
                 message: result.message || "Unknown error",
@@ -270,14 +259,12 @@ export default function SongCatalogScreen() {
 
     const handleDeleteCancel = async () => {
         store.hideModals();
-        setError(null); // Clear any previous errors
+        setError(null);
     }
 
     const listItems = store.songArray
         ?.filter((song) => {
-            // Apply multiple filters
             let passes = true;
-            // console.log(song)
             if (filters.showOnlyMine && auth.user?.email) {
                 passes = passes && song.ownerEmail === auth.user.email;
             } 
@@ -297,64 +284,39 @@ export default function SongCatalogScreen() {
             return passes;
         })
         ?.sort((a, b) => {
-            // Default sort (no sorting)
             if (!filters.sortBy || filters.sortBy === 'none') {
                 return 0;
             }
             
             switch(filters.sortBy) {
                 case 'title-asc':
-                    // A-Z by song title
                     return a.title.localeCompare(b.title);
-                    
                 case 'title-desc':
-                    // Z-A by song title
                     return b.title.localeCompare(a.title);
-                    
                 case 'artist-asc':
-                    // A-Z by artist name
                     return a.artist.localeCompare(b.artist);
-                    
                 case 'artist-desc':
-                    // Z-A by artist name
                     return b.artist.localeCompare(a.artist);
-                    
                 case 'year-hi-lo':
-                    // Newest year first (HI-LO)
                     return (b.year || 0) - (a.year || 0);
-                    
                 case 'year-lo-hi':
-                    // Oldest year first (LO-HI)
                     return (a.year || 0) - (b.year || 0);
-                    
                 case 'listens-hi-lo':
-                    // Most listens first (HI-LO) - assuming listens is a number
                     return (b.listens || 0) - (a.listens || 0);
-                    
                 case 'listens-lo-hi':
-                    // Least listens first (LO-HI)
                     return (a.listens || 0) - (b.listens || 0);
-                    
                 case 'playlists-hi-lo':
-                    // Most playlists first (HI-LO) - assuming song.playlists is an array or number
                     const bPlaylists = Array.isArray(b.playlists) ? b.playlists.length : (b.playlists || 0);
                     const aPlaylists = Array.isArray(a.playlists) ? a.playlists.length : (a.playlists || 0);
                     return bPlaylists - aPlaylists;
-                    
                 case 'playlists-lo-hi':
-                    // Least playlists first (LO-HI)
                     const bPlaylists2 = Array.isArray(b.playlists) ? b.playlists.length : (b.playlists || 0);
                     const aPlaylists2 = Array.isArray(a.playlists) ? a.playlists.length : (a.playlists || 0);
                     return aPlaylists2 - bPlaylists2;
-                    
                 case 'likes-hi-lo':
-                    // Most likes first - if you have a likes field
                     return (b.likes || 0) - (a.likes || 0);
-                    
                 case 'likes-lo-hi':
-                    // Least likes first
                     return (a.likes || 0) - (b.likes || 0);
-                    
                 default:
                     return 0;
             }
@@ -365,21 +327,22 @@ export default function SongCatalogScreen() {
                 song={song}
                 onClick={() => setSelectedSong(song)}
                 onEdit={() => {
-                    store.openModal(CurrentModal.EDIT_SONG) // open edit modal
+                    store.openModal(CurrentModal.EDIT_SONG)
                 }}
                 onDelete={() => {
-                    store.openModal(CurrentModal.DELETE_SONG) // open edit modal
+                    store.openModal(CurrentModal.DELETE_SONG)
                 }}
                 selected={selectedSong?._id === song._id}
             />
         )) || null;
+    
     return (
         <div id="songs-catalog-screen">
             <Box
                 sx={{
                     p: 4,
                     display: 'grid',
-                    gridTemplateColumns: '20% 80%',
+                    gridTemplateColumns: '20% 40% 40%',
                     gridTemplateRows: '5vh 20vh 20vh 25vh 10vh',
                     gap: 4,
                 }}
@@ -392,94 +355,90 @@ export default function SongCatalogScreen() {
                         color: '#f26fcf'
                     }}>Songs</Typography>
                 </Box>
+                
+                {/* Sort Section */}
                 <Box sx={{
                     border: '1px solid orange',
-                    gridColumn: '2/3',
-                    gridRow: '1/2'
+                    gridColumn: '2/4',
+                    gridRow: '1/2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    p: 2,
+                    gap: 2
                 }}>
-                    <Box sx={{
-                        border: '1px solid orange',
-                        gridColumn: '2/3',
-                        gridRow: '1/2',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end',
-                        p: 2,
-                        gap: 2
-                    }}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold', mr: 2 }}>
-                            Sort Songs By:
-                        </Typography>
-                        
-                        <Box sx={{ minWidth: 220 }}>
-                            <select 
-                                value={filters.sortBy || 'none'}
-                                onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px 12px',
-                                    borderRadius: '4px',
-                                    border: '1px solid #ccc',
-                                    backgroundColor: 'white',
-                                    fontSize: '14px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <option value="none">No Sorting</option>
-                                <optgroup label="Title">
-                                    <option value="title-asc">Title A-Z</option>
-                                    <option value="title-desc">Title Z-A</option>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold', mr: 2 }}>
+                        Sort Songs By:
+                    </Typography>
+                    
+                    <Box sx={{ minWidth: 220 }}>
+                        <select 
+                            value={filters.sortBy || 'none'}
+                            onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
+                            style={{
+                                width: '100%',
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                backgroundColor: 'white',
+                                fontSize: '14px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="none">No Sorting</option>
+                            <optgroup label="Title">
+                                <option value="title-asc">Title A-Z</option>
+                                <option value="title-desc">Title Z-A</option>
+                            </optgroup>
+                            <optgroup label="Artist">
+                                <option value="artist-asc">Artist A-Z</option>
+                                <option value="artist-desc">Artist Z-A</option>
+                            </optgroup>
+                            <optgroup label="Year">
+                                <option value="year-hi-lo">Year (Newest First)</option>
+                                <option value="year-lo-hi">Year (Oldest First)</option>
+                            </optgroup>
+                            <optgroup label="Listens">
+                                <option value="listens-hi-lo">Listens (Most First)</option>
+                                <option value="listens-lo-hi">Listens (Least First)</option>
+                            </optgroup>
+                            <optgroup label="Playlists">
+                                <option value="playlists-hi-lo">Playlists (Most First)</option>
+                                <option value="playlists-lo-hi">Playlists (Least First)</option>
+                            </optgroup>
+                            {store.songArray?.[0]?.hasOwnProperty('likes') && (
+                                <optgroup label="Likes">
+                                    <option value="likes-hi-lo">Likes (Most First)</option>
+                                    <option value="likes-lo-hi">Likes (Least First)</option>
                                 </optgroup>
-                                <optgroup label="Artist">
-                                    <option value="artist-asc">Artist A-Z</option>
-                                    <option value="artist-desc">Artist Z-A</option>
-                                </optgroup>
-                                <optgroup label="Year">
-                                    <option value="year-hi-lo">Year (Newest First)</option>
-                                    <option value="year-lo-hi">Year (Oldest First)</option>
-                                </optgroup>
-                                <optgroup label="Listens">
-                                    <option value="listens-hi-lo">Listens (Most First)</option>
-                                    <option value="listens-lo-hi">Listens (Least First)</option>
-                                </optgroup>
-                                <optgroup label="Playlists">
-                                    <option value="playlists-hi-lo">Playlists (Most First)</option>
-                                    <option value="playlists-lo-hi">Playlists (Least First)</option>
-                                </optgroup>
-                                {/* Optional: Add likes if your songs have likes */}
-                                {store.songArray?.[0]?.hasOwnProperty('likes') && (
-                                    <optgroup label="Likes">
-                                        <option value="likes-hi-lo">Likes (Most First)</option>
-                                        <option value="likes-lo-hi">Likes (Least First)</option>
-                                    </optgroup>
-                                )}
-                            </select>
-                        </Box>
-                        
-                        {/* Display current sort info */}
-                        {filters.sortBy && filters.sortBy !== 'none' && (
-                            <Typography variant="caption" sx={{ color: '#666', ml: 2 }}>
-                                {(() => {
-                                    switch(filters.sortBy) {
-                                        case 'title-asc': return 'Sorted: Title A-Z';
-                                        case 'title-desc': return 'Sorted: Title Z-A';
-                                        case 'artist-asc': return 'Sorted: Artist A-Z';
-                                        case 'artist-desc': return 'Sorted: Artist Z-A';
-                                        case 'year-hi-lo': return 'Sorted: Year (Newest)';
-                                        case 'year-lo-hi': return 'Sorted: Year (Oldest)';
-                                        case 'listens-hi-lo': return 'Sorted: Most Listens';
-                                        case 'listens-lo-hi': return 'Sorted: Least Listens';
-                                        case 'playlists-hi-lo': return 'Sorted: Most Playlists';
-                                        case 'playlists-lo-hi': return 'Sorted: Least Playlists';
-                                        case 'likes-hi-lo': return 'Sorted: Most Likes';
-                                        case 'likes-lo-hi': return 'Sorted: Least Likes';
-                                        default: return '';
-                                    }
-                                })()}
-                            </Typography>
-                        )}
+                            )}
+                        </select>
                     </Box>
+                    
+                    {filters.sortBy && filters.sortBy !== 'none' && (
+                        <Typography variant="caption" sx={{ color: '#666', ml: 2 }}>
+                            {(() => {
+                                switch(filters.sortBy) {
+                                    case 'title-asc': return 'Sorted: Title A-Z';
+                                    case 'title-desc': return 'Sorted: Title Z-A';
+                                    case 'artist-asc': return 'Sorted: Artist A-Z';
+                                    case 'artist-desc': return 'Sorted: Artist Z-A';
+                                    case 'year-hi-lo': return 'Sorted: Year (Newest)';
+                                    case 'year-lo-hi': return 'Sorted: Year (Oldest)';
+                                    case 'listens-hi-lo': return 'Sorted: Most Listens';
+                                    case 'listens-lo-hi': return 'Sorted: Least Listens';
+                                    case 'playlists-hi-lo': return 'Sorted: Most Playlists';
+                                    case 'playlists-lo-hi': return 'Sorted: Least Playlists';
+                                    case 'likes-hi-lo': return 'Sorted: Most Likes';
+                                    case 'likes-lo-hi': return 'Sorted: Least Likes';
+                                    default: return '';
+                                }
+                            })()}
+                        </Typography>
+                    )}
                 </Box>
+                
+                {/* Search Fields */}
                 <Box sx={{
                     border: '1px solid orange',
                     gridColumn: '1/2',
@@ -501,7 +460,7 @@ export default function SongCatalogScreen() {
                             onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
-                            name="SongYear"
+                            name="songYear"  // Fixed: was "SongYear" should be "songYear"
                             label="by Year"
                             value={formData.songYear}
                             onChange={handleChange('songYear')}
@@ -509,9 +468,11 @@ export default function SongCatalogScreen() {
                         />
                     </Stack>
                 </Box>
+                
+                {/* Song List */}
                 <Box sx={{
                     border: '1px solid orange',
-                    gridColumn: '2',
+                    gridColumn: '2/3',
                     gridRow: '2/5',
                     overflow: 'hidden',
                     display: 'flex',
@@ -520,9 +481,9 @@ export default function SongCatalogScreen() {
                     <List 
                         spacing={2}
                         sx={{
-                            overflowY: 'auto', // Enable vertical scrolling
+                            overflowY: 'auto',
                             maxHeight: '60vh',
-                            flexGrow: 1, // Take available space
+                            flexGrow: 1,
                             '&::-webkit-scrollbar': {
                                 width: '8px',
                             },
@@ -540,7 +501,110 @@ export default function SongCatalogScreen() {
                         }}>
                         {listItems}
                     </List>
+                    
+                    {/* Show message if no songs found */}
+                    {listItems && listItems.length === 0 && (
+                        <Box sx={{ p: 4, textAlign: 'center', color: '#666' }}>
+                            <Typography variant="body1">
+                                No songs found matching your search criteria.
+                            </Typography>
+                            <Button 
+                                sx={{ mt: 2 }}
+                                onClick={handleClear}
+                            >
+                                Clear Search
+                            </Button>
+                        </Box>
+                    )}
                 </Box>
+                
+                {/* YouTube Player Preview */}
+                <Box sx={{
+                    border: '1px solid orange',
+                    gridColumn: '3/4',
+                    gridRow: '2/5',
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                }}>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                        {selectedSong ? `Preview: ${selectedSong.title}` : 'Select a Song'}
+                    </Typography>
+                    
+                    {selectedSong?.youTubeId ? (
+                        <Box sx={{ width: '100%', maxWidth: 560 }}>
+                            <iframe
+                                width="100%"
+                                height="315"
+                                src={`https://www.youtube.com/embed/${selectedSong.youTubeId}?autoplay=0&modestbranding=1&rel=0`}
+                                title={`YouTube video player - ${selectedSong.title}`}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                style={{ borderRadius: '8px' }}
+                            ></iframe>
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    {selectedSong.title}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#666' }}>
+                                    {selectedSong.artist} ({selectedSong.year})
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#888', display: 'block', mt: 1 }}>
+                                    YouTube ID: {selectedSong.youTubeId}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    ) : (
+                        <Box sx={{ 
+                            width: '100%', 
+                            height: 315, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '8px'
+                        }}>
+                            <Typography variant="body1" sx={{ color: '#999' }}>
+                                {selectedSong 
+                                    ? 'No YouTube ID available for this song' 
+                                    : 'Click on a song to preview it here'}
+                            </Typography>
+                        </Box>
+                    )}
+                    
+                    {/* Song Info (when selected) */}
+                    {selectedSong && (
+                        <Box sx={{ mt: 3, p: 2, backgroundColor: '#f9f9f9', borderRadius: '8px', width: '100%' }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                Song Details:
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Title:</strong> {selectedSong.title}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Artist:</strong> {selectedSong.artist}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Year:</strong> {selectedSong.year}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Listens:</strong> {selectedSong.listens || 0}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Playlists:</strong> {Array.isArray(selectedSong.playlists) ? selectedSong.playlists.length : selectedSong.playlists || 0}
+                            </Typography>
+                            {selectedSong.ownerEmail && (
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', mt: 1 }}>
+                                    Added by: {selectedSong.ownerEmail}
+                                </Typography>
+                            )}
+                        </Box>
+                    )}
+                </Box>
+                
+                {/* Search Buttons */}
                 <Box sx={{
                     mt: 2,
                     gridColumn: '1/2',
@@ -557,8 +621,10 @@ export default function SongCatalogScreen() {
                         onClick={handleClear}
                     >Clear</Button>
                 </Box>
+                
+                {/* New Song Button */}
                 <Box sx={{
-                    gridColumn: '2/3',
+                    gridColumn: '2/4',
                     gridRow: '5',
                     display: 'flex'
                 }}>
@@ -569,12 +635,15 @@ export default function SongCatalogScreen() {
                 </Box>
                 
             </Box>
+            
+            {/* Create Song Modal */}
             <MUICreateSongModal
                 onCreateSong={handleCreateSong}
             />     
+            
+            {/* Edit Song Modal */}
             <Modal open={store.currentModal === CurrentModal.EDIT_SONG}>
                 <Box sx={{...style, height: error ? 550 : 450,}}>
-                    {/* Error Display */}
                     {error && (
                         <Alert severity="error" sx={{ mb: 0}}>
                             <AlertTitle>{error.title}</AlertTitle>
@@ -591,45 +660,32 @@ export default function SongCatalogScreen() {
                             Edit Song
                         </Typography>
                     </Box>
-                    <Stack spacing={2} sx={{
-                        p:4
-                    }}>
+                    <Stack spacing={2} sx={{ p:4 }}>
                         <ClearableTextField 
                             name="title"
                             label="Title"
                             value={editFormData.title}
                             onChange={handleEditChange('title')}
-                        
                         />
-                    
                         <ClearableTextField 
                             name="artist"
                             label="Artist"
                             value={editFormData.artist}
                             onChange={handleEditChange('artist')}
-                            
                         />
-                    
                         <ClearableTextField 
                             name="year"
                             label="Year"
                             value={editFormData.year}
                             onChange={handleEditChange('year')}
-                          
                         />
-                    
                         <ClearableTextField 
                             name="youTubeId"
                             label="YouTubeId"
                             value={editFormData.youTubeId}
                             onChange={handleEditChange('youTubeId')}
-                         
                         />
-                
-                        <Box sx={{
-                            display:"flex",
-                            justifyContent: "space-between"
-                        }}>
+                        <Box sx={{ display:"flex", justifyContent: "space-between" }}>
                             <Button sx={buttonStyle2} 
                                 disabled={!editFormData.title || !editFormData.artist || !editFormData.year || !editFormData.youTubeId } 
                                 onClick={handleConfirm}>Confirm</Button>
@@ -638,9 +694,10 @@ export default function SongCatalogScreen() {
                     </Stack>
                 </Box>
             </Modal> 
+            
+            {/* Delete Song Modal */}
             <Modal open={store.currentModal === CurrentModal.DELETE_SONG}>
                 <Box sx={{...style, height: error ? 550 : 450, display:"flex", flexDirection: 'column'}}>
-                    {/* Error Display */}
                     {error && (
                         <Alert severity="error" sx={{ mb: 0}}>
                             <AlertTitle>{error.title}</AlertTitle>
@@ -656,7 +713,6 @@ export default function SongCatalogScreen() {
                         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
                             Delete Song
                         </Typography>
-                        
                     </Box>
                     <Box sx={{flexGrow:1}}>
                         <Typography variant="h5" component="h2" sx={{ p:2, fontWeight: 'bold' }}>
@@ -666,11 +722,7 @@ export default function SongCatalogScreen() {
                             Doing so will remove it from all of you playlists
                         </Typography>
                     </Box>
-                    <Box sx={{
-                        display:"flex",
-                        justifyContent: "space-between"
-                    }}>
-                        
+                    <Box sx={{ display:"flex", justifyContent: "space-between" }}>
                         <Button sx={{...buttonStyle2, p:2, ml:2, mb:2,}} onClick={handleDeleteConfirm}>Confirm</Button>
                         <Button sx={{...buttonStyle2, p:2, mr:2, mb:2,}} onClick={handleDeleteCancel}>Cancel</Button>
                     </Box> 

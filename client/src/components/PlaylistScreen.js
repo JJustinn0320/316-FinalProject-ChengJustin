@@ -71,6 +71,12 @@ export default function PlaylistScreen() {
         
     }, [store]); // store in deps, but ref prevents re-fetching
 
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter'){
+            handleSearch()
+        }
+    }
+
     const handleChange = (field) => (event) => {
         const value = event.target.value;
         
@@ -394,30 +400,35 @@ export default function PlaylistScreen() {
                             label="by Playlist Name"
                             value={formData.playlistName}
                             onChange={handleChange('playlistName')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="username"
                             label="by User Name"
                             value={formData.username}
                             onChange={handleChange('username')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="songTitle"
                             label="by Song Title"
                             value={formData.songTitle}
                             onChange={handleChange('songTitle')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="songArtist"
                             label="by Song Artist"
                             value={formData.songArtist}
                             onChange={handleChange('songArtist')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="SongYear"
                             label="by Song Year"
                             value={formData.songYear}
                             onChange={handleChange('songYear')}
+                            onKeyDown={handleKeyDown}
                         />
                     </Stack>
                 </Box>

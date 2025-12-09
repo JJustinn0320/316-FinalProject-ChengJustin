@@ -171,6 +171,12 @@ export default function SongCatalogScreen() {
         youTubeId: ''
     });
 
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter'){
+            handleSearch()
+        }
+    }
+
     useEffect(() => {
         if (selectedSong) {
             console.log(selectedSong._id)
@@ -485,18 +491,21 @@ export default function SongCatalogScreen() {
                             label="by Title"
                             value={formData.songTitle}
                             onChange={handleChange('songTitle')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="songArtist"
                             label="by Artist"
                             value={formData.songArtist}
                             onChange={handleChange('songArtist')}
+                            onKeyDown={handleKeyDown}
                         />
                         <ClearableTextField 
                             name="SongYear"
                             label="by Year"
                             value={formData.songYear}
                             onChange={handleChange('songYear')}
+                            onKeyDown={handleKeyDown}
                         />
                     </Stack>
                 </Box>
@@ -590,6 +599,7 @@ export default function SongCatalogScreen() {
                             label="Title"
                             value={editFormData.title}
                             onChange={handleEditChange('title')}
+                        
                         />
                     
                         <ClearableTextField 
@@ -597,6 +607,7 @@ export default function SongCatalogScreen() {
                             label="Artist"
                             value={editFormData.artist}
                             onChange={handleEditChange('artist')}
+                            
                         />
                     
                         <ClearableTextField 
@@ -604,6 +615,7 @@ export default function SongCatalogScreen() {
                             label="Year"
                             value={editFormData.year}
                             onChange={handleEditChange('year')}
+                          
                         />
                     
                         <ClearableTextField 
@@ -611,6 +623,7 @@ export default function SongCatalogScreen() {
                             label="YouTubeId"
                             value={editFormData.youTubeId}
                             onChange={handleEditChange('youTubeId')}
+                         
                         />
                 
                         <Box sx={{

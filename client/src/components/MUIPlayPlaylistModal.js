@@ -203,20 +203,6 @@ export default function MUIPlayPlaylistModal(props) {
 
     useEffect(() => {
         if (!selectedSong) return;
-        console.log('incre')
-        const userId = auth.user._id;
-
-        // Increment PLAYLIST listens ONCE per user
-        fetch(`/api/playlist-store/playlists/${playlist._id}/listen`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId })
-        });
-
-        // Increment SONG listens EVERY play
-        fetch(`/api/song-store/songs/${selectedSong._id}/listen`, {
-            method: "PUT"
-        });
 
         // Load the selected song into YouTube player
         if (selectedSong.youtubeId && playerRef.current) {

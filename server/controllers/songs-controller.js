@@ -306,11 +306,25 @@ const copySong = async (req, res) => {
         });
     }
 }
+const incrementListen = async (req, res) => {
+    try {
+        console.log('song incr')
+        const song = await Song.findByIdAndUpdate(
+            req.params.songId,
+            { $inc: { listens: 1 } },
+            { new: true }
+        );
+        res.json(song);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
 module.exports = {
     getSongArray,
     createSong,
     editSong,
     deleteSong,
     getSongById,
-    copySong
+    copySong,
+    incrementListen
 }

@@ -8,5 +8,6 @@ router.post('/song/:songId', SongController.copySong)
 router.post('/song', SongController.createSong)
 router.patch('/song/:songId', SongController.editSong)
 router.delete('/song/:songId', SongController.deleteSong)
+router.put("/songs/:songId/listen", SongController.incrementListen)
 
 module.exports = router

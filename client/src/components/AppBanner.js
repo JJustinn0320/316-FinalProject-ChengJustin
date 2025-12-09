@@ -67,12 +67,27 @@ export default function AppBanner(){
     const path = location.pathname
 
     let menuItems = ""
+    let avatar = <AccountCircleIcon sx={{ color: "#f26fcf", fontSize: 40, background: "white", borderRadius: '50%'}}/>
     if (auth.loggedIn){
         menuItems = 
             <div>
                 <MenuItem onClick={handleEditAccount}>Edit Account</MenuItem>
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </div>   
+        avatar = <Box
+                        component="img"
+                        src={auth?.user?.avatar}
+                        alt="User avatar"
+                        sx={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '2px solid #f26fcf',
+                            backgroundColor: 'white',
+                            mb: 1
+                        }}
+                    />
     }
     else{
         menuItems=
@@ -81,6 +96,8 @@ export default function AppBanner(){
                 <MenuItem onClick={handleLogin}>Login</MenuItem>
             </div>
     }
+
+
     return (
         <AppBar position='static' sx={{ backgroundColor: '#f26fcf' }}>
             <Toolbar variant='dense' sx={{ justifyContent: 'space-between' }}>
@@ -94,7 +111,7 @@ export default function AppBanner(){
                     <IconButton edge='start' aria-label="account-circle" onClick={handleHome}>
                         <HomeOutlinedIcon sx={{ border: '3.5px solid white', color: "white", fontSize: 40, borderRadius: '50%' }}/>
                     </IconButton>
-                    {auth.loggedIn && (
+                    {(
                         <Stack direction="row" spacing={1}>
                             <Button variant="text" sx={buttonStyle} onClick={handlePlaylist}>Playlists</Button>
                             <Button variant="text" sx={buttonStyle} onClick={handleSongs}>Songs Catalog</Button>
@@ -119,7 +136,7 @@ export default function AppBanner(){
                     aria-label="account-circle" 
                     onClick={handleAccount}
                 >
-                    <AccountCircleIcon sx={{ color: "#f26fcf", fontSize: 40, background: "white", borderRadius: '50%'}}/>
+                    {avatar}
                 </IconButton>
                 <Menu
                     anchorEl={anchorEl}

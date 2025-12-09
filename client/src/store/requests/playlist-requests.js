@@ -55,7 +55,6 @@ export const editPlaylist = (playlistId, newName, updatedSongs) => {
   })
 }
 
-
 const apis = {
     getPlaylistArray,
     createPlaylist,
@@ -64,7 +63,7 @@ const apis = {
     removeSongFromPlaylist,
     deletePlaylist,
     copyPlaylist,
-    editPlaylist
+    editPlaylist,
 }
 
 export default apis

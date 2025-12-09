@@ -8,7 +8,8 @@ export const AuthActionType={
     GET_LOGGED_IN: "GET_LOGGED_IN",
     LOGIN_USER: "LOGIN_USER",
     LOGOUT_USER: "LOGOUT_USER",
-    REGISTER_USER: "REGISTER_USER"
+    REGISTER_USER: "REGISTER_USER",
+    UPDATE_USER: "UPDATE_USER"
 }
 
 function AuthContextProvider(props) {
@@ -51,6 +52,13 @@ function AuthContextProvider(props) {
                 })
             }
             case AuthActionType.REGISTER_USER: {
+                return setAuth({
+                    user: payload.user,
+                    loggedIn: false,
+                    errorMessage: payload.errorMessage
+                })
+            }
+            case AuthActionType.UPDATE_USER: {
                 return setAuth({
                     user: payload.user,
                     loggedIn: false,
@@ -140,6 +148,32 @@ function AuthContextProvider(props) {
                 payload: null
             })
             navigate('/')
+        }
+    }
+
+    auth.updateUser = async function(username, email, avatar, password, passwordConfirm) {
+        
+        try{   
+            const response = await authRequestSender.updateUser(username, email, avatar, password, passwordConfirm);   
+            if (response.status === 200) {
+                console.log("updated Sucessfully");
+                authReducer({
+                    type: AuthActionType.UPDATE_USER,
+                    payload: {
+                        user: response.data.user,
+                        errorMessage: null
+                    }
+                })
+                navigate('/')
+            }
+        } catch(error){
+            authReducer({
+                type: AuthActionType.UPDATE_USER,
+                payload: {
+                    user: auth.user,
+                    errorMessage: error.response.data.errorMessage
+                }
+            })
         }
     }
 

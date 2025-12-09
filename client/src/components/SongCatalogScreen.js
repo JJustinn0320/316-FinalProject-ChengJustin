@@ -291,7 +291,67 @@ export default function SongCatalogScreen() {
             return passes;
         })
         ?.sort((a, b) => {
-            return 0
+            // Default sort (no sorting)
+            if (!filters.sortBy || filters.sortBy === 'none') {
+                return 0;
+            }
+            
+            switch(filters.sortBy) {
+                case 'title-asc':
+                    // A-Z by song title
+                    return a.title.localeCompare(b.title);
+                    
+                case 'title-desc':
+                    // Z-A by song title
+                    return b.title.localeCompare(a.title);
+                    
+                case 'artist-asc':
+                    // A-Z by artist name
+                    return a.artist.localeCompare(b.artist);
+                    
+                case 'artist-desc':
+                    // Z-A by artist name
+                    return b.artist.localeCompare(a.artist);
+                    
+                case 'year-hi-lo':
+                    // Newest year first (HI-LO)
+                    return (b.year || 0) - (a.year || 0);
+                    
+                case 'year-lo-hi':
+                    // Oldest year first (LO-HI)
+                    return (a.year || 0) - (b.year || 0);
+                    
+                case 'listens-hi-lo':
+                    // Most listens first (HI-LO) - assuming listens is a number
+                    return (b.listens || 0) - (a.listens || 0);
+                    
+                case 'listens-lo-hi':
+                    // Least listens first (LO-HI)
+                    return (a.listens || 0) - (b.listens || 0);
+                    
+                case 'playlists-hi-lo':
+                    // Most playlists first (HI-LO) - assuming song.playlists is an array or number
+                    const bPlaylists = Array.isArray(b.playlists) ? b.playlists.length : (b.playlists || 0);
+                    const aPlaylists = Array.isArray(a.playlists) ? a.playlists.length : (a.playlists || 0);
+                    return bPlaylists - aPlaylists;
+                    
+                case 'playlists-lo-hi':
+                    // Least playlists first (LO-HI)
+                    const bPlaylists2 = Array.isArray(b.playlists) ? b.playlists.length : (b.playlists || 0);
+                    const aPlaylists2 = Array.isArray(a.playlists) ? a.playlists.length : (a.playlists || 0);
+                    return aPlaylists2 - bPlaylists2;
+                    
+                case 'likes-hi-lo':
+                    // Most likes first - if you have a likes field
+                    return (b.likes || 0) - (a.likes || 0);
+                    
+                case 'likes-lo-hi':
+                    // Least likes first
+                    return (a.likes || 0) - (b.likes || 0);
+                    
+                default:
+                    return 0;
+            }
         })
         ?.map((song) => (
             <SongCard
@@ -331,7 +391,88 @@ export default function SongCatalogScreen() {
                     gridColumn: '2/3',
                     gridRow: '1/2'
                 }}>
-                    
+                    <Box sx={{
+                        border: '1px solid orange',
+                        gridColumn: '2/3',
+                        gridRow: '1/2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        p: 2,
+                        gap: 2
+                    }}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold', mr: 2 }}>
+                            Sort Songs By:
+                        </Typography>
+                        
+                        <Box sx={{ minWidth: 220 }}>
+                            <select 
+                                value={filters.sortBy || 'none'}
+                                onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    backgroundColor: 'white',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="none">No Sorting</option>
+                                <optgroup label="Title">
+                                    <option value="title-asc">Title A-Z</option>
+                                    <option value="title-desc">Title Z-A</option>
+                                </optgroup>
+                                <optgroup label="Artist">
+                                    <option value="artist-asc">Artist A-Z</option>
+                                    <option value="artist-desc">Artist Z-A</option>
+                                </optgroup>
+                                <optgroup label="Year">
+                                    <option value="year-hi-lo">Year (Newest First)</option>
+                                    <option value="year-lo-hi">Year (Oldest First)</option>
+                                </optgroup>
+                                <optgroup label="Listens">
+                                    <option value="listens-hi-lo">Listens (Most First)</option>
+                                    <option value="listens-lo-hi">Listens (Least First)</option>
+                                </optgroup>
+                                <optgroup label="Playlists">
+                                    <option value="playlists-hi-lo">Playlists (Most First)</option>
+                                    <option value="playlists-lo-hi">Playlists (Least First)</option>
+                                </optgroup>
+                                {/* Optional: Add likes if your songs have likes */}
+                                {store.songArray?.[0]?.hasOwnProperty('likes') && (
+                                    <optgroup label="Likes">
+                                        <option value="likes-hi-lo">Likes (Most First)</option>
+                                        <option value="likes-lo-hi">Likes (Least First)</option>
+                                    </optgroup>
+                                )}
+                            </select>
+                        </Box>
+                        
+                        {/* Display current sort info */}
+                        {filters.sortBy && filters.sortBy !== 'none' && (
+                            <Typography variant="caption" sx={{ color: '#666', ml: 2 }}>
+                                {(() => {
+                                    switch(filters.sortBy) {
+                                        case 'title-asc': return 'Sorted: Title A-Z';
+                                        case 'title-desc': return 'Sorted: Title Z-A';
+                                        case 'artist-asc': return 'Sorted: Artist A-Z';
+                                        case 'artist-desc': return 'Sorted: Artist Z-A';
+                                        case 'year-hi-lo': return 'Sorted: Year (Newest)';
+                                        case 'year-lo-hi': return 'Sorted: Year (Oldest)';
+                                        case 'listens-hi-lo': return 'Sorted: Most Listens';
+                                        case 'listens-lo-hi': return 'Sorted: Least Listens';
+                                        case 'playlists-hi-lo': return 'Sorted: Most Playlists';
+                                        case 'playlists-lo-hi': return 'Sorted: Least Playlists';
+                                        case 'likes-hi-lo': return 'Sorted: Most Likes';
+                                        case 'likes-lo-hi': return 'Sorted: Least Likes';
+                                        default: return '';
+                                    }
+                                })()}
+                            </Typography>
+                        )}
+                    </Box>
                 </Box>
                 <Box sx={{
                     border: '1px solid orange',

@@ -21,11 +21,17 @@ export const registerUser = (username, email, avatar, password, passwordConfirm)
         username, email, avatar, password, passwordConfirm
     })
 }
+export const updateUser = (username, email, avatar, password, passwordConfirm) => {
+    return api.post(`/edit`, {
+        username, email, avatar, password, passwordConfirm
+    })
+}
 const apis = {
     getLoggedIn,
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    updateUser
 }
 
 export default apis

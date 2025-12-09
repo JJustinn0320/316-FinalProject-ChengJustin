@@ -10,7 +10,7 @@ router.patch('/playlist/:playlistId', PlaylistController.editPlaylist)
 router.get('/playlistArray', PlaylistController.getPlaylistArray)
 router.post('/:playlistId/songs', PlaylistController.addSongToPlaylist);
 router.delete('/:playlistId/songs/:songId', PlaylistController.removeSongFromPlaylist);
-
+router.put("/:playlistId/listen", PlaylistController.increamentPlaylist);
 router.get('/playlists', PlaylistController.getPlaylists)
 router.get('/playlist/:playlistId', PlaylistController.getPlaylistById)
 

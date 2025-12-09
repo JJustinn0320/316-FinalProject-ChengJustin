@@ -1,5 +1,7 @@
 const auth = require('../auth')
 const User = require('../models/user-model')
+const Playlist = require('../models/playlist-model')
+const Song = require('../models/song-model')
 const bcrypt = require('bcryptjs')
 
 // login user
@@ -48,6 +50,116 @@ const loginUser = async (req, res) => {
         res.status(500).send();
     }
 }
+const updateUser = async (req, res) => {
+    try{
+        console.log(req.body)
+        const { username, email, avatar, password, passwordConfirm } = req.body;
+        if (!username || !email || !avatar || !password || !passwordConfirm) {
+            console.log("faild: missing fields")
+            console.log(`username: ${username}, email: ${email}, avatar: ${avatar}, password: ${password}, passwordC: ${passwordConfirm}`)
+            return res.status(400).json({ success: false, errorMessage: "Please enter all required fields." });
+        }
+        if (password.length < 8) {
+            console.log("faild: pass length")
+            return res.status(400).json({ success: false, errorMessage: "Please enter a password of at least 8 characters."});
+        }
+        if (password !== passwordConfirm) {
+            console.log("faild: pass not equ")
+            return res.status(400).json({ success: false, errorMessage: "Please enter the same password twice."})
+        }
+        let userId = auth.verifyUser(req);
+        const existingUser = await User.findById(userId)
+
+        const existingUsername = await User.findOne({ 
+            username, 
+            _id: { $ne: userId } 
+        });
+        if (existingUsername) {
+            return res.status(400).json({ 
+                success: false, 
+                errorMessage: "Username is already taken." 
+            });
+        }
+
+        let passwordHash = ""
+        const passwordCorrect = await bcrypt.compare(password, existingUser.passwordHash);
+        if(passwordCorrect){
+            passwordHash = existingUser.passwordHash 
+        }
+        else{ //changing password
+            const saltRounds = 10;
+            const salt = await bcrypt.genSalt(saltRounds);
+            passwordHash = await bcrypt.hash(password, salt);
+        }
+        
+
+        const usernameChanged = existingUser.username !== username;
+        const emailChanged = existingUser.email !== email;
+        if (usernameChanged || emailChanged) {
+            console.log("Updating related data with new username/email...");
+            // Update Playlists
+            await Playlist.updateMany(
+                { 
+                    $or: [
+                        { ownerUsername: existingUser.username },
+                        { ownerEmail: existingUser.email }
+                    ]
+                },
+                { 
+                    $set: {
+                        ownerUsername: username,
+                        ownerEmail: email
+                    }
+                }
+            );
+            
+            // Update Songs
+            await Song.updateMany(
+                { 
+                    $or: [
+                        { ownerUsername: existingUser.username },
+                        { ownerEmail: existingUser.email }
+                    ]
+                },
+                { 
+                    $set: {
+                        ownerUsername: username,
+                        ownerEmail: email
+                    }
+                }
+            );
+            
+            console.log("Updated related data successfully");
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            {_id: userId },
+            {username, email, avatar, passwordHash},
+            {new: true}
+        )
+        const token = auth.signToken(updatedUser.id);
+        await res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+            maxAge: 24 * 60 * 60 * 1000 
+        }).status(200).json({
+            success: true,
+            user: {
+                id: updatedUser._id,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                avatar: updatedUser.avatar              
+            }
+        })
+
+    }
+    catch (error) {
+         console.error(error);
+        res.status(500).send();
+    }
+}
+
 
 // signup
 const registerUser = async (req, res) => {
@@ -106,7 +218,8 @@ const registerUser = async (req, res) => {
             user: {
                 id: savedUser._id,
                 username: savedUser.username,
-                email: savedUser.email              
+                email: savedUser.email,
+                avatar: savedUser.avatar              
             }
         })
     }
@@ -151,7 +264,8 @@ const getLoggedIn = async (req, res) => {
             user: {
                 id: loggedInUser._id,
                 username: loggedInUser.username,
-                email: loggedInUser.email
+                email: loggedInUser.email,
+                avatar: loggedInUser.avatar
             }
         })
     } catch (err) {
@@ -160,4 +274,4 @@ const getLoggedIn = async (req, res) => {
     }
 }
 
-module.exports = { loginUser, registerUser, logoutUser, getLoggedIn}
+module.exports = { loginUser, registerUser, logoutUser, getLoggedIn, updateUser}

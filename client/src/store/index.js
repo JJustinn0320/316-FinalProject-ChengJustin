@@ -24,6 +24,7 @@ export const GlobalStoreActionType = {
 
 export const CurrentModal = {
     NONE: "NONE",
+    PLAY_PLAYLIST: "PLAY_PLAYLIST",
     DELETE_PLAYLIST: "DELETE_PLAYLIST",
     EDIT_PLAYLIST: "EDIT_PLAYLIST",
     CREATE_SONG: "CREATE_SONG",
@@ -306,8 +307,6 @@ function GlobalStoreContextProvider(props) {
             };
         }
     }
-
-
     // ==============
     // SONG FUNCTIONS
     // ==============

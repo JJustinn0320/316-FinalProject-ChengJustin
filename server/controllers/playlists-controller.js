@@ -358,7 +358,7 @@ const addSongToPlaylist = async (req, res) => {
                 message: "This song is already in the playlist" 
             });
         }
-
+        await Song.findOneAndUpdate({_id: songId }, {playlists: song.playlists+1})
         playlist.songs.push(songId);
         await playlist.save();
 
@@ -437,7 +437,26 @@ const removeSongFromPlaylist = async (req, res) => {
         });
     }
 }
+const increamentPlaylist = async (req, res) => {
+    const { playlistId } = req.params;
+    const { userId } = req.body;
 
+    try {
+        console.log('playlist incr')
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) return res.status(404).send("Playlist not found");
+
+        // Add listen only if user hasn't listened before
+        if (!playlist.listens.includes(userId)) {
+            playlist.listens.push(userId);
+            await playlist.save();
+        }
+
+        return res.json(playlist);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
 module.exports = {
     createPlaylist,
     copyPlaylist,
@@ -447,5 +466,6 @@ module.exports = {
     getPlaylistById,
     getPlaylistArray,
     addSongToPlaylist,
-    removeSongFromPlaylist
+    removeSongFromPlaylist,
+    increamentPlaylist
 }

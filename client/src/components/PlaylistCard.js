@@ -1,6 +1,6 @@
 import { useContext} from 'react'
 
-import { GlobalStoreContext } from '../store';
+import AuthContext from '../auth';
 
 import ListItem from "@mui/material/ListItem"
 import ListItemButton from "@mui/material/ListItemButton";
@@ -11,6 +11,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccordionDetails from "@mui/material/AccordionDetails";
 import List from '@mui/material/List';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 //import List from "@mui/material/List";
 
 const buttonStyle = {
@@ -19,6 +20,7 @@ const buttonStyle = {
     mr:2,
     fontSize: 15,  
     minWidth: 60,
+    maxWidth: 60,
     maxHeight: 60,
     justifyContent: 'center',
     flex:1
@@ -26,13 +28,26 @@ const buttonStyle = {
 
 export default function PlaylistCard(props){
 
-    const { playlist, onDelete, onEdit, onCopy, onClick, selected } = props;
+    const { playlist, onDelete, onEdit, onPlay, onCopy, onClick, selected } = props;
 
-    const openPlayModal = () => {
-        console.log('temp open play modal')
-    }
+    const {auth} = useContext(AuthContext)
 
-    const {store} = useContext(GlobalStoreContext)
+    const accountCircle = <AccountCircleIcon sx={{ color: "#f26fcf", fontSize: 40, background: "white", borderRadius: '50%'}}/>
+
+    const avatar = <Box
+        component="img"
+        src={auth?.user?.avatar}
+        alt="User avatar"
+        sx={{
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '2px solid #f26fcf',
+            backgroundColor: 'white',
+            mb: 1
+        }}/>
+
 
     const songList = playlist.songs
         ?.map((song, index) => (
@@ -75,6 +90,7 @@ export default function PlaylistCard(props){
                     id="panel1-header"
 
                     >
+                    {(auth.loggedIn && playlist.ownerEmail === auth?.user.email) ? avatar : accountCircle}
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography sx={{ 
                             p: 1, 
@@ -89,21 +105,21 @@ export default function PlaylistCard(props){
                         minWidth: '30%',
                         maxWidth: '30%', 
                     }}>
-                        <ListItemButton 
+                        {playlist.ownerEmail === auth?.user?.email && <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#e91111ff'  }}
                             onClick={onDelete}
-                            >Delete</ListItemButton>
-                        <ListItemButton 
+                            >Delete</ListItemButton>}
+                        {playlist.ownerEmail === auth?.user?.email && <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#3421d8ff'  }}
                             onClick={onEdit}
-                            >Edit</ListItemButton>
-                        <ListItemButton 
+                            >Edit</ListItemButton>}
+                        {auth.loggedIn&&<ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#0b854eff'  }}
                             onClick={onCopy}
-                            >Copy</ListItemButton>
+                            >Copy</ListItemButton>}
                         <ListItemButton 
                             sx={{...buttonStyle, backgroundColor:'#a82df0ff'  }}
-                            onClick={openPlayModal}
+                            onClick={onPlay}
                             >Play</ListItemButton>
                     </Box>
                 </AccordionSummary>

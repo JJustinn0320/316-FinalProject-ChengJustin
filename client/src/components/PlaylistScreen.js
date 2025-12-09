@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 
-import { ClearableTextField, MUIEditPlaylistModal, PlaylistCard } from './index'
+import { ClearableTextField, MUIEditPlaylistModal, MUIPlayPlaylistModal , PlaylistCard } from './index'
 import { CurrentModal, GlobalStoreContext } from '../store';
 import AuthContext from '../auth';
 
@@ -180,7 +180,7 @@ export default function PlaylistScreen() {
             let passes = true;
             // console.log(playlist)
             if (filters.showOnlyMine && auth.user?.email) {
-                passes = passes && playlist.ownerEmail === auth.user.email;
+                passes = passes && playlist.ownerEmail === auth?.user.email;
                 //console.log(passes)
             } 
             if (filters.playlistName) {
@@ -191,22 +191,74 @@ export default function PlaylistScreen() {
                 const search = filters.username.toLowerCase();
                 passes = passes && playlist.ownerUsername.toLowerCase().includes(search)
             }
-            // if (filters.songTitle) {
-            //     const search = filters.songTitle.toLowerCase();
-            //     passes = passes && playlist.name.toLowerCase().includes(search)
-            // }
-            // if (filters.songArtist) {
-            //     const search = filters.songArtist.toLowerCase();
-            //     passes = passes && playlist.name.toLowerCase().includes(search)
-            // }
-            // if (filters.songYear) {
-            //     const search = filters.songYear.toLowerCase();
-            //     passes = passes && playlist.name.toLowerCase().includes(search)
-            // }
+            if (filters.songTitle) {
+                const search = filters.songTitle.toLowerCase();
+                // Check if any song in the playlist has a title that includes the search term
+                const hasMatchingTitle = playlist.songs.some(song => 
+                    song.title.toLowerCase().includes(search)
+                );
+                passes = passes && hasMatchingTitle;
+            }
+            if (filters.songArtist) {
+                const search = filters.songArtist.toLowerCase();
+                // Check if any song in the playlist has an artist that includes the search term
+                const hasMatchingArtist = playlist.songs.some(song => 
+                    song.artist.toLowerCase().includes(search)
+                );
+                passes = passes && hasMatchingArtist;
+            }
+            if (filters.songYear) {
+                const search = filters.songYear.toLowerCase();
+                // Check if any song in the playlist has a year that includes the search term
+                const hasMatchingYear = playlist.songs.some(song => 
+                    song.year.toString().toLowerCase().includes(search)
+                );
+                passes = passes && hasMatchingYear;
+            }
             return passes;
         })
         ?.sort((a, b) => {
-            return 0
+            // Default sort (no sorting)
+            if (!filters.sortBy || filters.sortBy === 'none') {
+                return 0;
+            }
+            
+            switch(filters.sortBy) {
+                case 'name-asc':
+                    // A-Z by playlist name
+                    return a.name.localeCompare(b.name);
+                    
+                case 'name-desc':
+                    // Z-A by playlist name
+                    return b.name.localeCompare(a.name);
+                    
+                case 'listens-hi-lo':
+                    // Most listens first (HI-LO)
+                    return (b.listens?.length || 0) - (a.listens?.length || 0);
+                    
+                case 'listens-lo-hi':
+                    // Least listens first (LO-HI)
+                    return (a.listens?.length || 0) - (b.listens?.length || 0);
+                    
+                case 'owner-asc':
+                    // A-Z by owner username
+                    return a.ownerUsername.localeCompare(b.ownerUsername);
+                    
+                case 'owner-desc':
+                    // Z-A by owner username
+                    return b.ownerUsername.localeCompare(a.ownerUsername);
+                    
+                case 'publish-date-newest':
+                    // Newest first (assuming you have a createdAt or publishedDate field)
+                    return new Date(b.published || b.createdAt || 0) - new Date(a.published || a.createdAt || 0);
+                    
+                case 'publish-date-oldest':
+                    // Oldest first
+                    return new Date(a.published || a.createdAt || 0) - new Date(b.published || b.createdAt || 0);
+                    
+                default:
+                    return 0;
+            }
         })
         ?.map((playlist) => (
             <PlaylistCard
@@ -221,6 +273,11 @@ export default function PlaylistScreen() {
                     event.stopPropagation()
                     setSelectedPlaylist(playlist)
                     handleCopy(playlist)
+                }}
+                onPlay={(event) => {
+                    event.stopPropagation()
+                    setSelectedPlaylist(playlist)
+                    store.openModal(CurrentModal.PLAY_PLAYLIST)
                 }}
                 onEdit={(event) => {
                     event.stopPropagation()
@@ -258,7 +315,74 @@ export default function PlaylistScreen() {
                     gridColumn: '2/3',
                     gridRow: '1/2'
                 }}>
-                    
+                    {/*SORT*/}
+                    <Box sx={{
+                        border: '1px solid orange',
+                        gridColumn: '2/3',
+                        gridRow: '1/2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        p: 2,
+                        gap: 2
+                    }}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold', mr: 2 }}>
+                            Sort By:
+                        </Typography>
+                        
+                        <Box sx={{ minWidth: 200 }}>
+                            <select 
+                                value={filters.sortBy || 'none'}
+                                onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    backgroundColor: 'white',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="none">No Sorting</option>
+                                <optgroup label="Playlist Name">
+                                    <option value="name-asc">A-Z (Ascending)</option>
+                                    <option value="name-desc">Z-A (Descending)</option>
+                                </optgroup>
+                                <optgroup label="Listens">
+                                    <option value="listens-hi-lo">Most Listens First (HI-LO)</option>
+                                    <option value="listens-lo-hi">Least Listens First (LO-HI)</option>
+                                </optgroup>
+                                <optgroup label="Owner">
+                                    <option value="owner-asc">Owner A-Z</option>
+                                    <option value="owner-desc">Owner Z-A</option>
+                                </optgroup>
+                                <optgroup label="Date">
+                                    <option value="publish-date-newest">Newest First</option>
+                                    <option value="publish-date-oldest">Oldest First</option>
+                                </optgroup>
+                            </select>
+                        </Box>
+                        
+                        {/* Display current sort info */}
+                        {filters.sortBy && filters.sortBy !== 'none' && (
+                            <Typography variant="caption" sx={{ color: '#666', ml: 2 }}>
+                                {(() => {
+                                    switch(filters.sortBy) {
+                                        case 'name-asc': return 'Sorted: A-Z';
+                                        case 'name-desc': return 'Sorted: Z-A';
+                                        case 'listens-hi-lo': return 'Sorted: Most Listens';
+                                        case 'listens-lo-hi': return 'Sorted: Least Listens';
+                                        case 'owner-asc': return 'Sorted: Owner A-Z';
+                                        case 'owner-desc': return 'Sorted: Owner Z-A';
+                                        case 'publish-date-newest': return 'Sorted: Newest First';
+                                        case 'publish-date-oldest': return 'Sorted: Oldest First';
+                                        default: return '';
+                                    }
+                                })()}
+                            </Typography>
+                        )}
+                    </Box>
                 </Box>
                 <Box sx={{
                     gridColumn: '1/2',
@@ -397,6 +521,9 @@ export default function PlaylistScreen() {
             <MUIEditPlaylistModal 
                 playlist={selectedPlaylist}
             />
+            <MUIPlayPlaylistModal
+                playlist={selectedPlaylist}
+                />
         </div>
     )
 }

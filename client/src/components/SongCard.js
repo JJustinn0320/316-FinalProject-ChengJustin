@@ -165,13 +165,13 @@ export default function SongCard(props){
                     }}>{song.title} by {song.artist} ({song.year})</Typography>
 
                     <div>
-                        <IconButton
+                        {auth.loggedIn &&<IconButton
                             id="long-button"
                             onClick={handleClick}
                         >
                             <MoreVertIcon />
-                        </IconButton>
-                        <Menu
+                        </IconButton>}
+                        {auth.loggedIn && <Menu
                             id="long-menu"
                             anchorEl={anchorEl}
                             open={open}
@@ -194,9 +194,9 @@ export default function SongCard(props){
                             >
                                 Add to Playlist
                             </MenuItem>
-                            <MenuItem onClick={onEdit}>Edit Song</MenuItem>
-                            <MenuItem onClick={onDelete}>Remove from Catalog</MenuItem>
-                        </Menu>
+                            {(song.ownerEmail === auth?.user.email) && <MenuItem onClick={onEdit}>Edit Song</MenuItem>}
+                            {(song.ownerEmail === auth?.user.email) && <MenuItem onClick={onDelete}>Remove from Catalog</MenuItem>}
+                        </Menu>}
                         <Menu
                             id="playlist-submenu"
                             anchorEl={playlistAnchorEl}

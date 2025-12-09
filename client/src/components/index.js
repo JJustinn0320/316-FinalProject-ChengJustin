@@ -8,6 +8,7 @@ import LoginScreen from "./LoginScreen";
 import MUICreateSongModal from './MUICreateSongModal'
 import MUIEditPlaylistModal from "./MUIEditPlaylistModal";
 import MUIErrorModal from "./MUIErrorModal";
+import MUIPlayPlaylistModal from "./MUIPlayPlaylistModal";
 import PlaylistScreen from "./PlaylistScreen";
 import RegisterScreen from "./RegisterScreen";
 import SongCard from "./SongCard";
@@ -25,6 +26,7 @@ export {
     MUICreateSongModal,
     MUIEditPlaylistModal,
     MUIErrorModal,
+    MUIPlayPlaylistModal,
     PlaylistScreen,
     RegisterScreen,
     SongCard,
